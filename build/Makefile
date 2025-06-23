@@ -64,6 +64,16 @@ CMAKE_BINARY_DIR = C:\Users\aiueo700\source\repos\dotsoundpaint\build
 #=============================================================================
 # Targets provided globally by CMake.
 
+# Special rule for the target test
+test:
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running tests..."
+	"C:\Program Files\CMake\bin\ctest.exe" $(ARGS)
+.PHONY : test
+
+# Special rule for the target test
+test/fast: test
+.PHONY : test/fast
+
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
@@ -83,6 +93,51 @@ rebuild_cache:
 # Special rule for the target rebuild_cache
 rebuild_cache/fast: rebuild_cache
 .PHONY : rebuild_cache/fast
+
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Available install components are: \"gmock\" \"gtest\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	"C:\Program Files\CMake\bin\cmake.exe" -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Install the project..."
+	"C:\Program Files\CMake\bin\cmake.exe" -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing only the local directory..."
+	"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local/fast
+
+# Special rule for the target install/strip
+install/strip: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip
+
+# Special rule for the target install/strip
+install/strip/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Installing the project stripped..."
+	"C:\Program Files\CMake\bin\cmake.exe" -DCMAKE_INSTALL_DO_STRIP=1 -P cmake_install.cmake
+.PHONY : install/strip/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -128,6 +183,98 @@ SDotPaint/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\SDotPaint.dir\build.make CMakeFiles/SDotPaint.dir/build
 .PHONY : SDotPaint/fast
 
+#=============================================================================
+# Target rules for targets named SdotPaint_tests
+
+# Build rule for target.
+SdotPaint_tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 SdotPaint_tests
+.PHONY : SdotPaint_tests
+
+# fast build rule for target.
+SdotPaint_tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/build
+.PHONY : SdotPaint_tests/fast
+
+#=============================================================================
+# Target rules for targets named gmock
+
+# Build rule for target.
+gmock: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 gmock
+.PHONY : gmock
+
+# fast build rule for target.
+gmock/fast:
+	$(MAKE) $(MAKESILENT) -f _deps\googletest-build\googlemock\CMakeFiles\gmock.dir\build.make _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/build
+.PHONY : gmock/fast
+
+#=============================================================================
+# Target rules for targets named gmock_main
+
+# Build rule for target.
+gmock_main: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 gmock_main
+.PHONY : gmock_main
+
+# fast build rule for target.
+gmock_main/fast:
+	$(MAKE) $(MAKESILENT) -f _deps\googletest-build\googlemock\CMakeFiles\gmock_main.dir\build.make _deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/build
+.PHONY : gmock_main/fast
+
+#=============================================================================
+# Target rules for targets named gtest
+
+# Build rule for target.
+gtest: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 gtest
+.PHONY : gtest
+
+# fast build rule for target.
+gtest/fast:
+	$(MAKE) $(MAKESILENT) -f _deps\googletest-build\googletest\CMakeFiles\gtest.dir\build.make _deps/googletest-build/googletest/CMakeFiles/gtest.dir/build
+.PHONY : gtest/fast
+
+#=============================================================================
+# Target rules for targets named gtest_main
+
+# Build rule for target.
+gtest_main: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 gtest_main
+.PHONY : gtest_main
+
+# fast build rule for target.
+gtest_main/fast:
+	$(MAKE) $(MAKESILENT) -f _deps\googletest-build\googletest\CMakeFiles\gtest_main.dir\build.make _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/build
+.PHONY : gtest_main/fast
+
+PaintModel.obj: PaintModel.cpp.obj
+.PHONY : PaintModel.obj
+
+# target to build an object file
+PaintModel.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SDotPaint.dir\build.make CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/PaintModel.cpp.obj
+.PHONY : PaintModel.cpp.obj
+
+PaintModel.i: PaintModel.cpp.i
+.PHONY : PaintModel.i
+
+# target to preprocess a source file
+PaintModel.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SDotPaint.dir\build.make CMakeFiles/SDotPaint.dir/PaintModel.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/PaintModel.cpp.i
+.PHONY : PaintModel.cpp.i
+
+PaintModel.s: PaintModel.cpp.s
+.PHONY : PaintModel.s
+
+# target to generate assembly for a file
+PaintModel.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SDotPaint.dir\build.make CMakeFiles/SDotPaint.dir/PaintModel.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/PaintModel.cpp.s
+.PHONY : PaintModel.cpp.s
+
 main.obj: main.cpp.obj
 .PHONY : main.obj
 
@@ -152,6 +299,30 @@ main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\SDotPaint.dir\build.make CMakeFiles/SDotPaint.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+tests/PaintModel.test.obj: tests/PaintModel.test.cpp.obj
+.PHONY : tests/PaintModel.test.obj
+
+# target to build an object file
+tests/PaintModel.test.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/tests/PaintModel.test.cpp.obj
+.PHONY : tests/PaintModel.test.cpp.obj
+
+tests/PaintModel.test.i: tests/PaintModel.test.cpp.i
+.PHONY : tests/PaintModel.test.i
+
+# target to preprocess a source file
+tests/PaintModel.test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/tests/PaintModel.test.cpp.i
+.PHONY : tests/PaintModel.test.cpp.i
+
+tests/PaintModel.test.s: tests/PaintModel.test.cpp.s
+.PHONY : tests/PaintModel.test.s
+
+# target to generate assembly for a file
+tests/PaintModel.test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\SdotPaint_tests.dir\build.make CMakeFiles/SdotPaint_tests.dir/tests/PaintModel.test.cpp.s
+.PHONY : tests/PaintModel.test.cpp.s
+
 # Help Target
 help:
 	@echo The following are some of the valid targets for this Makefile:
@@ -159,11 +330,27 @@ help:
 	@echo ... clean
 	@echo ... depend
 	@echo ... edit_cache
+	@echo ... install
+	@echo ... install/local
+	@echo ... install/strip
+	@echo ... list_install_components
 	@echo ... rebuild_cache
+	@echo ... test
 	@echo ... SDotPaint
+	@echo ... SdotPaint_tests
+	@echo ... gmock
+	@echo ... gmock_main
+	@echo ... gtest
+	@echo ... gtest_main
+	@echo ... PaintModel.obj
+	@echo ... PaintModel.i
+	@echo ... PaintModel.s
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s
+	@echo ... tests/PaintModel.test.obj
+	@echo ... tests/PaintModel.test.i
+	@echo ... tests/PaintModel.test.s
 .PHONY : help
 
 

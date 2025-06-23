@@ -1,7 +1,10 @@
-// Windows APIを使用するために必要なヘッダファイル
+﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
 
 #include <string>
+#include <vector>
+
+#include "PaintModel.h"
 
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理します
@@ -82,21 +85,25 @@ int WINAPI WinMain(
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // マウスの位置を保持するための変数。static変数を使用して、ウィンドウプロシージャが呼び出されるたびに初期化されないようにする
-    static POINT ptMouse = {-1, -1}; // マウスの位置を無効な座標で初期化(一度もクリックされていない状態を示す)
+    static PaintModel paint_model; // PaintModelのstaticなインスタンス
 
     switch (uMsg)
     {
     // 　マウスの左クリックが押されたときのメッセージ
     case WM_LBUTTONDOWN:
     {
+        POINT new_point; // 新しいマウスの位置を格納する変数
+
         // lParamからマウスの位置を取得
-        ptMouse.x = LOWORD(lParam); // lParamの下位ワードからX座標を取得
-        ptMouse.y = HIWORD(lParam); // lParamの上位ワードからY座標を取得
+        new_point.x = LOWORD(lParam); // lParamの下位ワードからX座標を取得
+        new_point.y = HIWORD(lParam); // lParamの上位ワードからY座標を取得
+
+        // 点を追加するメソッド
+        paint_model.addPoint(new_point); //! 新しい点を保存する
 
         // ウインドウ全体を無効化し、再描画する
         InvalidateRect(hwnd, NULL, TRUE); // ウィンドウ全体を再描画するように要求
-
-        return 0; // メッセージを処理したことを示す
+        return 0;                         // メッセージを処理したことを示す
     }
 
     // ウィンドウが破棄されるときのメッセージ
@@ -110,11 +117,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
 
-        // 保存された座標が有効な場合（マウスがクリックされた場合）
-        if (ptMouse.x >= 0 && ptMouse.y >= 0)
+        //! 保存されているすべてのマウスの位置を描画
+        for (const auto &point : paint_model.getPoints())
         {
-            // その座標に点を描画する
-            SetPixel(hdc, ptMouse.x, ptMouse.y, RGB(0, 0, 0)); // 黒色の点を描画
+            SetPixel(hdc, point.x, point.y, RGB(0, 0, 0));
         }
 
         EndPaint(hwnd, &ps);

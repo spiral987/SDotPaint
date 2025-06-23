@@ -75,29 +75,45 @@ CMakeFiles/SDotPaint.dir/main.cpp.obj: CMakeFiles/SDotPaint.dir/flags.make
 CMakeFiles/SDotPaint.dir/main.cpp.obj: C:/Users/aiueo700/source/repos/dotsoundpaint/main.cpp
 CMakeFiles/SDotPaint.dir/main.cpp.obj: CMakeFiles/SDotPaint.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\aiueo700\source\repos\dotsoundpaint\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/SDotPaint.dir/main.cpp.obj"
-	C:\PROGRA~1\mingw64\bin\G__~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SDotPaint.dir/main.cpp.obj -MF CMakeFiles\SDotPaint.dir\main.cpp.obj.d -o CMakeFiles\SDotPaint.dir\main.cpp.obj -c C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp
+	$(CMAKE_COMMAND) -E __run_co_compile --tidy="C:/Program Files/LLVM/bin/clang-tidy.exe;-checks=-*,modernize-*,readability-*,performance-*,bugprone-*,cppcoreguidelines-*;--extra-arg-before=--driver-mode=g++" --source=C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp -- C:\PROGRA~1\LLVM\bin\CLANG_~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SDotPaint.dir/main.cpp.obj -MF CMakeFiles\SDotPaint.dir\main.cpp.obj.d -o CMakeFiles\SDotPaint.dir\main.cpp.obj -c C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp
 
 CMakeFiles/SDotPaint.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/SDotPaint.dir/main.cpp.i"
-	C:\PROGRA~1\mingw64\bin\G__~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp > CMakeFiles\SDotPaint.dir\main.cpp.i
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CXX_CREATE_PREPROCESSED_SOURCE
 
 CMakeFiles/SDotPaint.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SDotPaint.dir/main.cpp.s"
-	C:\PROGRA~1\mingw64\bin\G__~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp -o CMakeFiles\SDotPaint.dir\main.cpp.s
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CXX_CREATE_ASSEMBLY_SOURCE
+
+CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj: CMakeFiles/SDotPaint.dir/flags.make
+CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj: C:/Users/aiueo700/source/repos/dotsoundpaint/PaintModel.cpp
+CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj: CMakeFiles/SDotPaint.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\aiueo700\source\repos\dotsoundpaint\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj"
+	$(CMAKE_COMMAND) -E __run_co_compile --tidy="C:/Program Files/LLVM/bin/clang-tidy.exe;-checks=-*,modernize-*,readability-*,performance-*,bugprone-*,cppcoreguidelines-*;--extra-arg-before=--driver-mode=g++" --source=C:\Users\aiueo700\source\repos\dotsoundpaint\PaintModel.cpp -- C:\PROGRA~1\LLVM\bin\CLANG_~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj -MF CMakeFiles\SDotPaint.dir\PaintModel.cpp.obj.d -o CMakeFiles\SDotPaint.dir\PaintModel.cpp.obj -c C:\Users\aiueo700\source\repos\dotsoundpaint\PaintModel.cpp
+
+CMakeFiles/SDotPaint.dir/PaintModel.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/SDotPaint.dir/PaintModel.cpp.i"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CXX_CREATE_PREPROCESSED_SOURCE
+
+CMakeFiles/SDotPaint.dir/PaintModel.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/SDotPaint.dir/PaintModel.cpp.s"
+	$(CMAKE_COMMAND) -E cmake_unimplemented_variable CMAKE_CXX_CREATE_ASSEMBLY_SOURCE
 
 # Object files for target SDotPaint
 SDotPaint_OBJECTS = \
-"CMakeFiles/SDotPaint.dir/main.cpp.obj"
+"CMakeFiles/SDotPaint.dir/main.cpp.obj" \
+"CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj"
 
 # External object files for target SDotPaint
 SDotPaint_EXTERNAL_OBJECTS =
 
 SDotPaint.exe: CMakeFiles/SDotPaint.dir/main.cpp.obj
+SDotPaint.exe: CMakeFiles/SDotPaint.dir/PaintModel.cpp.obj
 SDotPaint.exe: CMakeFiles/SDotPaint.dir/build.make
 SDotPaint.exe: CMakeFiles/SDotPaint.dir/linkLibs.rsp
 SDotPaint.exe: CMakeFiles/SDotPaint.dir/objects1.rsp
 SDotPaint.exe: CMakeFiles/SDotPaint.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\aiueo700\source\repos\dotsoundpaint\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable SDotPaint.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\aiueo700\source\repos\dotsoundpaint\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable SDotPaint.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\SDotPaint.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

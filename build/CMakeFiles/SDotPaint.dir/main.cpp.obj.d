@@ -1,333 +1,242 @@
 CMakeFiles/SDotPaint.dir/main.cpp.obj: \
- C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/windows.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_mac.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_secapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/vadefs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sdks/_mingw_ddk.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sdkddkver.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/excpt.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/crtdefs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/corecrt.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/stdarg.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stdarg.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_stdarg.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/windef.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winapifamily.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/minwindef.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/specstrings.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sal.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/concurrencysal.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/driverspecs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winnt.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_unicode.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ctype.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/apiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/intrin-impl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/basetsd.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/guiddef.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/string.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sec_api/string_s.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/x86intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/x86gprintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/ia32intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/stddef.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stddef.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/adxintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/bmiintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/bmi2intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/cetintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/cldemoteintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/clflushoptintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/clwbintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/clzerointrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/enqcmdintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/fxsrintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/lzcntintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/lwpintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/movdirintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/mwaitintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/mwaitxintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/pconfigintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/popcntintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/pkuintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/rdseedintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/rtmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/serializeintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/sgxintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/tbmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/tsxldtrkintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/uintrintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/waitpkgintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/wbnoinvdintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xsaveintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xsavecintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xsaveoptintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xsavesintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xtestintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/hresetintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/immintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/mmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xmmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/mm_malloc.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/stdlib.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cstdlib \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32/bits/c++config.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32/bits/os_defines.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32/bits/cpu_defines.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/pstl/pstl_config.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stdlib.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/corecrt_wstdlib.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include-fixed/limits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include-fixed/syslimits.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/limits.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sec_api/stdlib_s.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/malloc.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/std_abs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/errno.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/emmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/pmmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/tmmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/smmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/wmmintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avxintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avxvnniintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx2intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512fintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512erintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512pfintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512cdintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512bwintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512dqintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vlbwintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vldqintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512ifmaintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512ifmavlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vbmiintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vbmivlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx5124fmapsintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx5124vnniwintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vpopcntdqintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vbmi2intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vbmi2vlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vnniintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vnnivlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vpopcntdqvlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512bitalgintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vp2intersectintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512vp2intersectvlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512fp16intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512fp16vlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/shaintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/fmaintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/f16cintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/gfniintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/vaesintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/vpclmulqdqintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512bf16vlintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/avx512bf16intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/amxtileintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/amxint8intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/amxbf16intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/prfchwintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/keylockerintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/mm3dnow.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/fma4intrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/ammintrin.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/xopintrin.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack4.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/poppack.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack4.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack2.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/poppack.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack2.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack8.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack8.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ktmtypes.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/apisetcconv.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/minwinbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/bemapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/debugapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/errhandlingapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/fibersapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/fileapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/handleapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/heapapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ioapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/interlockedapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/jobapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/libloaderapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/memoryapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/namedpipeapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/namespaceapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/processenv.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/processthreadsapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/processtopologyapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/profileapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/realtimeapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/securityappcontainer.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/securitybaseapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/synchapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sysinfoapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/systemtopologyapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/threadpoolapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/threadpoollegacyapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/utilapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wow64apiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winerror.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/fltwinerror.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/timezoneapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wingdi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/pshpack1.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winuser.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/tvout.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winnls.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/datetimeapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stringapiset.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wincon.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winver.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winreg.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/reason.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winnetwk.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wnnc.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/virtdisk.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/cderr.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/dde.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ddeml.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/dlgs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/lzexpand.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mmsystem.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mmsyscom.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mciapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mmiscapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mmiscapi2.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/playsoundapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mmeapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/timeapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/joystickapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/nb30.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpc.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcdce.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcdcep.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcnsi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcnterr.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcasync.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/shellapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winperf.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winsock.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_timeval.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_bsd_types.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/inaddr.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_socket_types.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_fd_types.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_ip_types.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_ip_mreq1.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_wsadata.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_xmitfile.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/psdk_inc/_wsa_errnos.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wincrypt.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/bcrypt.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ncrypt.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/dpapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winefs.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winscard.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wtypes.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcndr.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcnsip.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/rpcsal.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/ole2.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/objbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/combaseapi.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wtypesbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/unknwnbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/objidlbase.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/cguid.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/objidl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/unknwn.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/urlmon.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/oleidl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/servprov.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/msxml.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/oaidl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/propidl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/oleauto.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winioctl.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winsmcrd.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winspool.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/prsht.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/commdlg.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stralign.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sec_api/stralign_s.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/winsvc.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/mcx.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/imm.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/string \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stringfwd.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/memoryfwd.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/char_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/postypes.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cwchar \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/wchar.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/corecrt_stdio_config.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_off_t.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/_mingw_stat64.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/swprintf.inl \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sec_api/wchar_s.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/type_traits \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cstdint \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/stdint.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stdint.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/allocator.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32/bits/c++allocator.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/new_allocator.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/new \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/exception.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/functexcept.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/exception_defines.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/move.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/cpp_type_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/localefwd.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/x86_64-w64-mingw32/bits/c++locale.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/clocale \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/locale.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/stdio.h \
- C:/PROGRA~1/mingw64/x86_64-w64-mingw32/include/sec_api/stdio_s.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/iosfwd \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cctype \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/ostream_insert.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/cxxabi_forced.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_iterator_base_types.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_iterator_base_funcs.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/concept_check.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/debug/assertions.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_iterator.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/ext/type_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/ptr_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_function.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/backward/binders.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/ext/numeric_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_algobase.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_pair.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/utility.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/debug/debug.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/predefined_ops.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/refwrap.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/invoke.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/range_access.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/initializer_list \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/basic_string.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/ext/alloc_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/alloc_traits.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/stl_construct.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/string_view \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/functional_hash.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/hash_bytes.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/string_view.tcc \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/ext/string_conversions.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cstdio \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/cerrno \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/charconv.h \
- C:/PROGRA~1/mingw64/lib/gcc/x86_64-w64-mingw32/12.2.0/include/c++/bits/basic_string.tcc
+  C:\Users\aiueo700\source\repos\dotsoundpaint\main.cpp \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\windows.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\winapifamily.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\winpackagefamily.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\sdkddkver.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\excpt.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vcruntime.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\sal.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\concurrencysal.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\vadefs.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vadefs.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\stdarg.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\stdarg.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg_header_macro.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg___gnuc_va_list.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg_va_list.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg_va_arg.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg___va_copy.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stdarg_va_copy.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\windef.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\minwindef.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\specstrings.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\specstrings_strict.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\specstrings_undef.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\driverspecs.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\sdv_driverspecs.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winnt.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\ctype.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wctype.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\kernelspecs.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\basetsd.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\guiddef.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\string.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_memory.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_memcpy_s.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\errno.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vcruntime_string.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wstring.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\pshpack4.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\poppack.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\pshpack2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\pshpack8.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\pshpack1.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\apiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\ktmtypes.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\apisetcconv.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\minwinbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\apiquery2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\processenv.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\fileapifromapp.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\fileapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\debugapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\utilapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\handleapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\errhandlingapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\fibersapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\namedpipeapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\profileapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\heapapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\ioapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\synchapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\interlockedapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\processthreadsapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\sysinfoapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\memoryapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\enclaveapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\threadpoollegacyapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\threadpoolapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\jobapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\jobapi2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\wow64apiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\libloaderapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\securitybaseapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\namespaceapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\systemtopologyapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\processtopologyapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\securityappcontainer.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\realtimeapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\winerror.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\timezoneapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\wingdi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winuser.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\tvout.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winnls.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\datetimeapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\stringapiset.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\wincon.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\wincontypes.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\consoleapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\consoleapi2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\consoleapi3.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winver.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\verrsrc.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winreg.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\reason.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winnetwk.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\wnnc.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\cderr.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\dde.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\ddeml.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\dlgs.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\lzexpand.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mmsystem.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mmsyscom.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mciapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mmiscapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mmiscapi2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\playsoundapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mmeapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\timeapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\joystickapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\nb30.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpc.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcdce.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcdcep.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\rpcnsi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcnterr.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcasync.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\shellapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winperf.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winsock.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\inaddr.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\wincrypt.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\bcrypt.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\ncrypt.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\dpapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winefs.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winscard.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\wtypes.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcndr.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\rpcnsip.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\rpcsal.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\wtypesbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winioctl.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\winsmcrd.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winspool.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\prsht.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\ole2.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\objbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\combaseapi.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\stdlib.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_malloc.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_search.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\stddef.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\stddef.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_header_macro.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_ptrdiff_t.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_size_t.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_wchar_t.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_null.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_nullptr_t.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_max_align_t.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\__stddef_offsetof.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wstdlib.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\limits.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\limits.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\unknwnbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\objidlbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\cguid.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\coml2api.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\objidl.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\unknwn.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\propidlbase.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\oaidl.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\urlmon.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\oleidl.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\servprov.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\msxml.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\propidl.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\oleauto.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\commdlg.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\shared\stralign.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\winsvc.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\mcx.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\imm.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\um\ime_cmodes.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\string \
+  C:\Program\ Files\LLVM\lib\clang\20\include\yvals_core.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\yvals_core.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xkeycheck.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xstring \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\__msvc_sanitizer_annotate_container.hpp \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\__msvc_string_view.hpp \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\iosfwd \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\yvals.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\crtdbg.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vcruntime_new_debug.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vcruntime_new.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\crtdefs.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\use_ansi.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cstdio \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\stdio.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wstdio.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_stdio_config.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cstring \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cwchar \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\wchar.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wconio.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wdirect.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wio.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_share.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wprocess.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_wtime.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\sys\stat.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\sys\types.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xtr1common \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xutility \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\__msvc_iter_core.hpp \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\utility \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\initializer_list \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cstddef \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\type_traits \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cstdint \
+  C:\Program\ Files\LLVM\lib\clang\20\include\stdint.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\stdint.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\climits \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cstdlib \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\math.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_math.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xmemory \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\limits \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cfloat \
+  C:\Program\ Files\LLVM\lib\clang\20\include\float.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\float.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\intrin0.h \
+  C:\Program\ Files\LLVM\lib\clang\20\include\adcintrin.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\new \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\exception \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\malloc.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vcruntime_exception.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\eh.h \
+  C:\Program\ Files\ (x86)\Windows\ Kits\10\Include\10.0.22621.0\ucrt\corecrt_terminate.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xatomic.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\xpolymorphic_allocator.h \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\tuple \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\cctype \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\vector \
+  C:\Program\ Files\Microsoft\ Visual\ Studio\2022\Community\VC\Tools\MSVC\14.41.34120\include\__msvc_bit_utils.hpp \
+  C:\Users\aiueo700\source\repos\dotsoundpaint\PaintModel.h
