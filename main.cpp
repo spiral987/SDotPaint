@@ -81,6 +81,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+    // 　マウスの左クリックが押されたときのメッセージ
+    case WM_LBUTTONDOWN:
+        MessageBoxW(hwnd, L"左クリックが押されました！", L"通知", MB_OK);
+        return 0;
+
     // ウィンドウが破棄されるときのメッセージ
     case WM_DESTROY:
         PostQuitMessage(0); // メッセージループを終了させる
