@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "(gdb) Launch PaintApp", // デバッグ構成の名前（自由に変更可）
+            "type": "cppdbg",               // 使用するデバッガの種類（C/C++拡張機能）
+            "request": "launch",            // プログラムを起動してデバッグする
+            
+            // デバッグ対象の実行ファイルのパス。
+            // ${command:cmake.launchTargetPath} はCMake Tools拡張機能が提供する変数で、
+            // 現在の起動ターゲットのパスを自動で取得してくれます。非常に便利！
+            "program": "${command:cmake.launchTargetPath}",
+
+            "args": [], // プログラムに渡すコマンドライン引数（今回はなし）
+            
+            // trueにすると、プログラムのエントリーポイント(WinMain)で自動的に停止します。
+            // 学習の第一歩として非常に便利です。
+            "stopAtEntry": true, 
+            
+            "cwd": "${workspaceFolder}", // 作業ディレクトリ
+            "environment": [],
+            "externalConsole": false, // 外部コンソールは不要
+            "MIMode": "gdb",
+            
+            // あなたの環境のgdb.exeへのパス。
+            // パスが通っていれば不要な場合もありますが、明示すると確実です。
+            // 例: "miDebuggerPath": "C:/mingw64/bin/gdb.exe",
+            "miDebuggerPath": "gdb", // パスが通っていればこれでOK
+
+            "setupCommands": [
+                {
+                    "description": "gdb の整形式表示を有効にする",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}

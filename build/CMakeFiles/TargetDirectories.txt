@@ -1,0 +1,3 @@
+C:/Users/aiueo700/source/repos/dotsoundpaint/build/CMakeFiles/SDotPaint.dir
+C:/Users/aiueo700/source/repos/dotsoundpaint/build/CMakeFiles/edit_cache.dir
+C:/Users/aiueo700/source/repos/dotsoundpaint/build/CMakeFiles/rebuild_cache.dir
