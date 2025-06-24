@@ -11,10 +11,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
-    HINSTANCE hInstance,     // プログラムを識別するためのインスタンスハンドル
-    HINSTANCE hPrevInstance, // 常にNULL（古いWindowsの名残）
-    LPSTR lpCmdLine,         // コマンドライン引数
-    int nCmdShow)            // ウィンドウの表示状態
+    HINSTANCE hInstance,        // プログラムを識別するためのインスタンスハンドル
+    HINSTANCE hPrevInstance,    // 常にNULL（古いWindowsの名残）
+    LPSTR lpszCmdLine,          // コマンドライン引数
+    int nShowCmd)               // ウィンドウの表示状態
 {
     // 1. ウィンドウクラスの設計と登録
     // ----------------------------------------------------------------
@@ -60,10 +60,8 @@ int WINAPI WinMain(
     {
         MessageBoxW(NULL, L"ウィンドウの生成に失敗しました！", L"エラー", MB_ICONERROR);
         return 0;
-    }
-
-    // 作成したウィンドウを表示
-    ShowWindow(hwnd, nCmdShow);
+    }    // 作成したウィンドウを表示
+    ShowWindow(hwnd, nShowCmd);
     UpdateWindow(hwnd);
 
     // 3. メッセージループ（ウインドウがメッセージの発生を監視するためのループ）

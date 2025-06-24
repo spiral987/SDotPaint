@@ -15,9 +15,7 @@ jobs:
   # "build" という名前のジョブ
   build:
     # Windowsの最新環境で実行
-    runs-on: windows-latest
-
-    # ジョブのステップを定義    
+    runs-on: windows-latest    # ジョブのステップを定義
     steps:
       # 1. リポジトリのコードをチェックアウトする
       - name: Checkout repository
@@ -43,30 +41,42 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cmake-
 
-      # 4. 静的解析ツールをインストール（キャッシュされていない場合のみ）
+      # 4. 静的解析ツールをインストール
       - name: Install static analysis tools
         run: |
-          if (-not (Get-Command clang-tidy -ErrorAction SilentlyContinue)) {
-            Write-Host "Installing LLVM..."
-            choco install llvm -y
-          } else {
-            Write-Host "LLVM already installed"
+          Write-Host "Installing static analysis tools..."
+          # LLVMのインストール
+          Write-Host "Installing LLVM..."
+          choco install llvm -y --force
+          
+          # cppcheckのインストール
+          Write-Host "Installing cppcheck..."
+          choco install cppcheck -y --force
+          
+          # 環境変数を更新（PowerShellセッション内で）
+          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+          
+          # インストール確認
+          Write-Host "Verifying installations..."
+          try {
+            $clangVersion = clang-tidy --version
+            Write-Host "clang-tidy version: $clangVersion"
+          } catch {
+            Write-Host "clang-tidy not found in PATH"
           }
           
-          if (-not (Get-Command cppcheck -ErrorAction SilentlyContinue)) {
-            Write-Host "Installing cppcheck..."
-            choco install cppcheck -y
-          } else {
-            Write-Host "cppcheck already installed"
+          try {
+            $cppcheckVersion = cppcheck --version
+            Write-Host "cppcheck version: $cppcheckVersion"
+          } catch {
+            Write-Host "cppcheck not found in PATH"
           }
 
       # 5. CMakeでビルドディレクトリを構成する
       #    -B build: 'build'という名前のビルドディレクトリを作成
       #    -DCMAKE_BUILD_TYPE=Debug: Debug構成で設定
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
-
-      # 6. CMakeでプロジェクトをビルドする
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug      # 6. CMakeでプロジェクトをビルドする
       #    --build build: 'build'ディレクトリをビルド対象に指定
       #    --config Debug: Debug構成でビルド
       - name: Build project
@@ -75,16 +85,27 @@ jobs:
       # 7. 静的解析を実行
       - name: Run static analysis
         run: |
+          # 環境変数を再度更新
+          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
+          
           # clang-tidyで静的解析
           Write-Host "Running clang-tidy..."
-          Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object {
-            Write-Host "Analyzing: $($_.FullName)"
-            clang-tidy $_.FullName -- -std=c++17
+          try {
+            Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object {
+              Write-Host "Analyzing: $($_.FullName)"
+              & clang-tidy $_.FullName -- -std=c++17
+            }
+          } catch {
+            Write-Host "clang-tidy failed: $($_.Exception.Message)"
           }
           
           # cppcheckで静的解析
           Write-Host "Running cppcheck..."
-          cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
+          try {
+            & cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
+          } catch {
+            Write-Host "cppcheck failed: $($_.Exception.Message)"
+          }
         continue-on-error: true
 
       # 8. CTestを実行して単体テストを走らせる
