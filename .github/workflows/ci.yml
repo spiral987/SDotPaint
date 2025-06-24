@@ -77,7 +77,7 @@ jobs:
           }
           echo "--- Running cppcheck ---"
           cppcheck --version
-          cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
+          cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem -i build .
         continue-on-error: true # 静的解析でエラーが出てもワークフローを止めない
 
       - name: Run tests
