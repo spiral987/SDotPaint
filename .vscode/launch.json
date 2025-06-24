@@ -2,24 +2,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(windows) Launch PaintApp", // デバッグ構成の名前（自由に変更可）
-            "type": "cppvsdbg",               // 使用するデバッガの種類（C/C++拡張機能）
-            "request": "launch",            // プログラムを起動してデバッグする
+            // ★ 変更：分かりやすいように名前を変更
+            "name": "(Windows) Launch PaintApp", 
+            // ★ 変更：デバッガの種類を "cppvsdbg" に変更
+            "type": "cppvsdbg",               
+            "request": "launch",            
             
-            // デバッグ対象の実行ファイルのパス。
-            // ${command:cmake.launchTargetPath} はCMake Tools拡張機能が提供する変数で、
-            // 現在の起動ターゲットのパスを自動で取得してくれます。非常に便利！
             "program": "${command:cmake.launchTargetPath}",
 
-            "args": [], // プログラムに渡すコマンドライン引数（今回はなし）
+            "args": [], 
             
-            // trueにすると、プログラムのエントリーポイント(WinMain)で自動的に停止します。
-            // 学習の第一歩として非常に便利です。
             "stopAtEntry": true, 
             
-            "cwd": "${workspaceFolder}", // 作業ディレクトリ
+            "cwd": "${workspaceFolder}", 
             "environment": [],
-            "externalConsole": true
+            // ★ 変更：外部コンソールを true にすると、デバッグメッセージが見やすい場合があります
+            "externalConsole": true 
+            
+            // ★ 削除：MIModeとmiDebuggerPathはGDB用の設定なので不要です
         }
     ]
 }

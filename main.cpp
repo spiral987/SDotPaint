@@ -1,6 +1,5 @@
 ﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
-
 #include <string>
 #include <vector>
 

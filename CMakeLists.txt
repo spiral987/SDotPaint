@@ -4,23 +4,11 @@ cmake_minimum_required(VERSION 3.14)
 # プロジェクトの名前と使用言語を定義
 project(SDotPaint LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 # C++の言語標準を指定
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#--- 静的解析ツールの設定 ---
-find_program(CLANG_TIDY_EXE clang-tidy)
-if(CLANG_TIDY_EXE)
-    message(STATUS "Clang-Tidy found at: ${CLANG_TIDY_EXE}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-checks=-*,modernize-*,readability-*,performance-*,bugprone-*,cppcoreguidelines-*")
-else()
-    message(WARNING "Clang-Tidy not found. Static analysis will be skipped.")
-endif()
-
-
-#--- メインの実行ファイル定義 ---
+#--- 実行ファイルのターゲット定義 ---
 add_executable(SDotPaint WIN32 main.cpp PaintModel.cpp)
 
 target_compile_definitions(SDotPaint PRIVATE
@@ -36,35 +24,46 @@ target_link_libraries(SDotPaint PRIVATE
 # ===================================================================
 # 単体テスト (GoogleTest) の設定
 # ===================================================================
+
+# CTest（CMakeのテスト機能）を有効化
 enable_testing()
+
+# FetchContentモジュールをインクルード
 include(FetchContent)
 
+# GoogleTestの情報を宣言 (ダウンロード元を指定)
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
   GIT_TAG    v1.14.0 
 )
 
-# ★★★ この一行を復活させます！ ★★★
+# ★★★ 修正点 ★★★
+# GoogleTestに、我々のプロジェクトと同じランタイムライブラリを使ってもらうための設定
 set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")
 
+# GoogleTestを実際にダウンロードしてプロジェクトで利用可能にする
 FetchContent_MakeAvailable(googletest)
 
+# テスト用の新しい実行ファイルを定義
 add_executable(
   SdotPaint_tests 
   tests/PaintModel.test.cpp
   PaintModel.cpp
 )
 
+# テスト用実行ファイルにGoogleTestをリンクする
 target_link_libraries(
   SdotPaint_tests 
   PRIVATE gtest_main
 )
 
+# GoogleTestのインクルードディレクトリをテストターゲットに追加
 target_include_directories(
     SdotPaint_tests 
     PRIVATE ${googletest_SOURCE_DIR}/googletest/include
 )
 
+# CTestにテストを追加する
 include(GoogleTest)
 gtest_discover_tests(SdotPaint_tests)
