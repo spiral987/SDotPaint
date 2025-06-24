@@ -39,4 +39,4 @@ jobs:
       #    --test-dir build: 'build'ディレクトリ内のテストを実行
       #    --config Debug: Debug構成のテストを実行
       - name: Run tests
-        run: ctest --test-dir build --config Debug -C Debug
+        run: ctest --test-dir build -C Debug
