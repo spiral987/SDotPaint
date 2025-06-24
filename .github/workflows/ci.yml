@@ -1,0 +1,42 @@
+# ワークフローの名前
+name: C++ CI
+
+# このワークフローが実行されるタイミングを定義
+on:
+  # mainブランチへのpush時
+  push:
+    branches: [ "main" ]
+  # mainブランチへのpull request作成・更新時
+  pull_request:
+    branches: [ "main" ]
+
+# 実行するジョブを定義
+jobs:
+  # "build" という名前のジョブ
+  build:
+    # Windowsの最新環境で実行
+    runs-on: windows-latest
+
+    # ジョブのステップを定義
+    steps:
+      # 1. リポジトリのコードをチェックアウトする
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. CMakeでビルドディレクトリを構成する
+      #    -B build: 'build'という名前のビルドディレクトリを作成
+      #    -DCMAKE_BUILD_TYPE=Debug: Debug構成で設定
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug
+
+      # 3. CMakeでプロジェクトをビルドする
+      #    --build build: 'build'ディレクトリをビルド対象に指定
+      #    --config Debug: Debug構成でビルド
+      - name: Build project
+        run: cmake --build build --config Debug
+
+      # 4. CTestを実行して単体テストを走らせる
+      #    --test-dir build: 'build'ディレクトリ内のテストを実行
+      #    --config Debug: Debug構成のテストを実行
+      - name: Run tests
+        run: ctest --test-dir build --config Debug -C Debug

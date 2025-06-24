@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\SDotPaint.dir/objects.a
-C:\PROGRA~1\mingw64\bin\ar.exe qc CMakeFiles\SDotPaint.dir/objects.a @CMakeFiles\SDotPaint.dir\objects1.rsp
-C:\PROGRA~1\mingw64\bin\G__~1.EXE -g -mwindows -Wl,--whole-archive CMakeFiles\SDotPaint.dir/objects.a -Wl,--no-whole-archive -o SDotPaint.exe -Wl,--out-implib,libSDotPaint.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\SDotPaint.dir\linkLibs.rsp

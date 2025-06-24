@@ -1,8 +1,0 @@
-[
-{
-  "directory": "C:/Users/aiueo700/source/repos/dotsoundpaint/build",
-  "command": "C:\\PROGRA~1\\mingw64\\bin\\G__~1.EXE -DUNICODE -D_UNICODE  -g -std=gnu++17 -o CMakeFiles\\SDotPaint.dir\\main.cpp.obj -c C:\\Users\\aiueo700\\source\\repos\\dotsoundpaint\\main.cpp",
-  "file": "C:/Users/aiueo700/source/repos/dotsoundpaint/main.cpp",
-  "output": "CMakeFiles/SDotPaint.dir/main.cpp.obj"
-}
-]
