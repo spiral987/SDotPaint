@@ -15,41 +15,70 @@ jobs:
   # "build" という名前のジョブ
   build:
     # Windowsの最新環境で実行
-    runs-on: windows-latest
-
-    # ジョブのステップを定義
+    runs-on: windows-latest    # ジョブのステップを定義
     steps:
       # 1. リポジトリのコードをチェックアウトする
       - name: Checkout repository
-        uses: actions/checkout@v4      # 2. 静的解析ツールをインストール
-      - name: Install static analysis tools
-        run: |
-          choco install llvm
-          choco install cppcheck
+        uses: actions/checkout@v4
 
-      # 3. CMakeでビルドディレクトリを構成する
-      #    -B build: 'build'という名前のビルドディレクトリを作成
-      #    -DCMAKE_BUILD_TYPE=Debug: Debug構成で設定
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug      # 4. CMakeでプロジェクトをビルドする
-      #    --build build: 'build'ディレクトリをビルド対象に指定
-      #    --config Debug: Debug構成でビルド
-      - name: Build project
-        run: cmake --build build --config Debug      # 5. 静的解析を実行
-      - name: Run static analysis
+      # GoogleTestのダウンロードをキャッシュする
+      # FetchContentでダウンロードされるライブラリをキャッシュすることで、
+      # 毎回ダウンロードするのを防ぎ、Configure CMakeの時間を短縮します。
+      - name: Cache GoogleTest
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: ${{ runner.os }}-googletest-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-googletest-
+
+      # 専用アクションでLLVMをキャッシュ付きでインストール
+      - name: Install LLVM (for clang-tidy)
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          # インストールしたいLLVMのメジャーバージョンを指定します。
+          # '18' の部分を '17'などに変更することも可能です。
+          version: "18"
+          # このアクションがキャッシュを自動的に管理してくれます。
+      
+      # cppcheckは別途インストールします（必要であれば）
+      # cppcheckをインストールし、そのパスを環境変数に追加する
+      - name: Install cppcheck
         run: |
-          # clang-tidyで静的解析
-          Write-Host "Running clang-tidy..."
-          Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object {
-            Write-Host "Analyzing: $($_.FullName)"
-            clang-tidy $_.FullName -- -std=c++17
+          choco install cppcheck -y --force
+          # Cppcheckのデフォルトのインストールパスを定義
+          $CPPCHECK_PATH = "C:\Program Files\Cppcheck"
+          # GITHUB_ENVを使って、後続のステップでPATHが通るようにする
+          echo "PATH=$env:PATH;$CPPCHECK_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
+
+      # Configure、Build、Testはキャッシュの有無に関わらず実行します。
+      # C++のビルドキャッシュは複雑なため、依存ライブラリのキャッシュが最も効果的です。
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Build project
+        run: cmake --build build --config Debug
+      
+      # 静的解析の実行方法を改善
+      # clang-tidyにビルド構成を教え、cppcheckもエラーがあっても継続するようにします。
+      - name: Run Static Analysis
+        run: |
+          echo "--- Running clang-tidy ---"
+          clang-tidy --version
+          # "-Exclude 'build/*'" を追加して、依存ライブラリを除外
+          $filesToAnalyze = Get-ChildItem -Path . -Filter "*.cpp" -Recurse -Exclude 'build/*'
+          if ($filesToAnalyze) {
+            echo "Analyzing files: $($filesToAnalyze.FullName -join ', ')"
+            # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
+            clang-tidy.exe -p build $filesToAnalyze.FullName
+          } else {
+            echo "No .cpp files found to analyze (excluding build directory)."
           }
-          
-          # cppcheckで静的解析
-          Write-Host "Running cppcheck..."
+          echo "--- Running cppcheck ---"
+          cppcheck --version
           cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
-        continue-on-error: true    # 6. CTestを実行して単体テストを走らせる
-      #    --test-dir build: 'build'ディレクトリ内のテストを実行
-      #    --config Debug: Debug構成のテストを実行
+        continue-on-error: true # 静的解析でエラーが出てもワークフローを止めない
+
       - name: Run tests
         run: ctest --test-dir build -C Debug

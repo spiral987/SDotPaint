@@ -2,24 +2,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // ★ 変更：分かりやすいように名前を変更
-            "name": "(Windows) Launch PaintApp", 
-            // ★ 変更：デバッガの種類を "cppvsdbg" に変更
-            "type": "cppvsdbg",               
-            "request": "launch",            
+            "name": "(Windows) Launch SDotPaint",
+            "type": "cppvsdbg",
+            "request": "launch",
             
-            "program": "${command:cmake.launchTargetPath}",
+            // ★ 重要：実際のexeファイルの直接パスを指定
+            "program": "${workspaceFolder}/build/Debug/SDotPaint.exe",
 
-            "args": [], 
+            "args": [],
             
-            "stopAtEntry": true, 
+            "stopAtEntry": false,
             
-            "cwd": "${workspaceFolder}", 
+            "cwd": "${workspaceFolder}",
             "environment": [],
-            // ★ 変更：外部コンソールを true にすると、デバッグメッセージが見やすい場合があります
-            "externalConsole": true 
-            
-            // ★ 削除：MIModeとmiDebuggerPathはGDB用の設定なので不要です
+            "externalConsole": false
         }
     ]
 }
