@@ -18,16 +18,16 @@ class PaintModel
 {
 private:
     // 点のリストを保持するメンバー変数
-    std::vector<POINT> points_;
+    std::vector<PenPoint> points_;
 
 public:
     // 新しい点をリストに追加する
-    void addPoint(POINT p);
+    void addPoint(PenPoint p);
 
     // 現在の点のリスト（読み取り専用=const）を取得する
     // 参照渡しにすると高速・省メモリ
     // 末尾のconstはメンバ変数を書き換えないことを保証するもの
-    const std::vector<POINT> &getPoints() const;
+    const std::vector<PenPoint> &getPoints() const;
 
     // すべての点をクリアする
     void clearPoints();
