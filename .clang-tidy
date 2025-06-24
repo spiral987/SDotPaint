@@ -1,0 +1,31 @@
+---
+# clang-tidyの設定ファイル
+# C++の静的解析ルールを定義
+
+# チェックするルールを指定
+Checks: >
+  -*,
+  clang-analyzer-*,
+  modernize-*,
+  readability-*,
+  performance-*,
+  bugprone-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+  -readability-avoid-const-params-in-decls
+
+# チェック対象から除外するファイルパターン
+HeaderFilterRegex: '.*'
+
+# WarningsAsErrors: '*'
+
+# 各ルールの設定
+CheckOptions:
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.VariableCase
+    value: camelBack
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
