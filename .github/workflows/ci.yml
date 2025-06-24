@@ -66,9 +66,15 @@ jobs:
         run: |
           echo "--- Running clang-tidy ---"
           clang-tidy --version
-          # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
-          clang-tidy.exe -p build (Get-ChildItem -Path . -Filter "*.cpp" -Recurse).FullName
-
+          # "-Exclude 'build/*'" を追加して、依存ライブラリを除外
+          $filesToAnalyze = Get-ChildItem -Path . -Filter "*.cpp" -Recurse -Exclude 'build/*'
+          if ($filesToAnalyze) {
+            echo "Analyzing files: $($filesToAnalyze.FullName -join ', ')"
+            # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
+            clang-tidy.exe -p build $filesToAnalyze.FullName
+          } else {
+            echo "No .cpp files found to analyze (excluding build directory)."
+          }
           echo "--- Running cppcheck ---"
           cppcheck --version
           cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
