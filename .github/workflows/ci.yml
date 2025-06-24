@@ -32,17 +32,19 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-googletest-
 
-      # ツールのインストールと環境変数の設定をまとめる 
-      # ツールを一度にインストールし、GITHUB_ENVを使って後続のステップ全体で
-      # PATHが有効になるようにします。
-      - name: Install Tools and Set Environment
-        run: |
-          choco install llvm cppcheck -y --force
-          $LLVM_PATH = "C:\Program Files\LLVM\bin"
-          echo "PATH=$env:PATH;$LLVM_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "LLVM_PATH=$LLVM_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        shell: pwsh
+      # 専用アクションでLLVMをキャッシュ付きでインストール
+      - name: Install LLVM (for clang-tidy)
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          # インストールしたいLLVMのメジャーバージョンを指定します。
+          # '18' の部分を '17'などに変更することも可能です。
+          version: "18"
+          # このアクションがキャッシュを自動的に管理してくれます。
       
+      # cppcheckは別途インストールします（必要であれば）
+      - name: Install cppcheck
+        run: choco install cppcheck -y --force
+
       # Configure、Build、Testはキャッシュの有無に関わらず実行します。
       # C++のビルドキャッシュは複雑なため、依存ライブラリのキャッシュが最も効果的です。
       - name: Configure CMake
@@ -51,7 +53,7 @@ jobs:
       - name: Build project
         run: cmake --build build --config Debug
       
-      # 改善点③：静的解析の実行方法を改善
+      # 静的解析の実行方法を改善
       # clang-tidyにビルド構成を教え、cppcheckもエラーがあっても継続するようにします。
       - name: Run Static Analysis
         run: |
