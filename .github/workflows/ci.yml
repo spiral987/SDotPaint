@@ -58,7 +58,7 @@ jobs:
           echo "--- Running clang-tidy ---"
           clang-tidy --version
           # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
-          clang-tidy-8.exe -p build $(Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object { $_.FullName })
+          clang-tidy.exe -p build (Get-ChildItem -Path . -Filter "*.cpp" -Recurse).FullName
 
           echo "--- Running cppcheck ---"
           cppcheck --version
