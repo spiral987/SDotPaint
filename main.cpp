@@ -182,43 +182,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // ペンも黒に設定（円の輪郭用）
         HPEN blackPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-        HPEN oldPen = (HPEN)SelectObject(hdc, blackPen);        //! 保存されているすべてのマウスの点を描画する==============================================
+        HPEN oldPen = (HPEN)SelectObject(hdc, blackPen);
+
+        //! 保存されているすべてのマウスの点を描画する==============================================
         // PaintModelから点のリストを取得
-        const auto& points = paint_model.getPoints();
-        
-        if (!points.empty())
+        for (const auto &penpoint : paint_model.getPoints())
         {
-            // 最初の点は円として描画
-            const auto& firstPoint = points[0];
-            int x = firstPoint.point.x;
-            int y = firstPoint.point.y;
-            int radius = (firstPoint.pressure / 128) + 1;
+            int x = penpoint.point.x;
+            int y = penpoint.point.y;
+            int radius = (penpoint.pressure / 128) + 1; // 筆圧に応じて半径を調整（128で割ることで0-1024の範囲を0-8の範囲に変換）
+
+            // 黒く塗りつぶされた円を描画
             Ellipse(hdc, x - radius, y - radius, x + radius, y + radius);
-            
-            // 2点目以降は前の点と線で繋ぐ
-            for (size_t i = 1; i < points.size(); ++i)
-            {
-                const auto& prevPoint = points[i - 1];
-                const auto& currPoint = points[i];
-                
-                // 線の太さを筆圧に応じて調整
-                int penWidth = (currPoint.pressure / 128) + 1;
-                HPEN thickPen = CreatePen(PS_SOLID, penWidth, RGB(0, 0, 0));
-                HPEN oldThickPen = (HPEN)SelectObject(hdc, thickPen);
-                
-                // 前の点から現在の点まで線を描画
-                MoveToEx(hdc, prevPoint.point.x, prevPoint.point.y, nullptr);
-                LineTo(hdc, currPoint.point.x, currPoint.point.y);
-                
-                // 現在の点に円も描画（線の端を丸くするため）
-                int radius = (currPoint.pressure / 128) + 1;
-                Ellipse(hdc, currPoint.point.x - radius, currPoint.point.y - radius, 
-                        currPoint.point.x + radius, currPoint.point.y + radius);
-                
-                // ペンを復元・削除
-                SelectObject(hdc, oldThickPen);
-                DeleteObject(thickPen);
-            }
         }
         //! ================================================================================
 
