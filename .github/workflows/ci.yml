@@ -42,8 +42,15 @@ jobs:
           # このアクションがキャッシュを自動的に管理してくれます。
       
       # cppcheckは別途インストールします（必要であれば）
+      # cppcheckをインストールし、そのパスを環境変数に追加する
       - name: Install cppcheck
-        run: choco install cppcheck -y --force
+        run: |
+          choco install cppcheck -y --force
+          # Cppcheckのデフォルトのインストールパスを定義
+          $CPPCHECK_PATH = "C:\Program Files\Cppcheck"
+          # GITHUB_ENVを使って、後続のステップでPATHが通るようにする
+          echo "PATH=$env:PATH;$CPPCHECK_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
 
       # Configure、Build、Testはキャッシュの有無に関わらず実行します。
       # C++のビルドキャッシュは複雑なため、依存ライブラリのキャッシュが最も効果的です。
