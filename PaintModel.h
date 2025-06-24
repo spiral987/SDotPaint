@@ -11,7 +11,7 @@ struct PenPoint
 {
     POINT point;
     UINT32 pressure; // ペンの圧力
-}
+};
 
 // アプリケーションのデータとロジックを管理するクラス
 class PaintModel
