@@ -21,95 +21,49 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. Chocolateyキャッシュを復元
-      - name: Cache Chocolatey packages
+      # GoogleTestのダウンロードをキャッシュする
+      # FetchContentでダウンロードされるライブラリをキャッシュすることで、
+      # 毎回ダウンロードするのを防ぎ、Configure CMakeの時間を短縮します。
+      - name: Cache GoogleTest
         uses: actions/cache@v4
         with:
-          path: |
-            C:\ProgramData\chocolatey\lib
-            C:\tools
-          key: ${{ runner.os }}-choco-${{ hashFiles('**/ci.yml') }}
+          path: build/_deps
+          key: ${{ runner.os }}-googletest-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-choco-
+            ${{ runner.os }}-googletest-
 
-      # 3. CMakeビルドキャッシュを復元
-      - name: Cache CMake build
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-cmake-
-
-      # 4. 静的解析ツールをインストール
-      - name: Install static analysis tools
+      # ツールのインストールと環境変数の設定をまとめる 
+      # ツールを一度にインストールし、GITHUB_ENVを使って後続のステップ全体で
+      # PATHが有効になるようにします。
+      - name: Install Tools and Set Environment
         run: |
-          Write-Host "Installing static analysis tools..."
-          # LLVMのインストール
-          Write-Host "Installing LLVM..."
-          choco install llvm -y --force
-          
-          # cppcheckのインストール
-          Write-Host "Installing cppcheck..."
-          choco install cppcheck -y --force
-          
-          # 環境変数を更新（PowerShellセッション内で）
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
-          
-          # インストール確認
-          Write-Host "Verifying installations..."
-          try {
-            $clangVersion = clang-tidy --version
-            Write-Host "clang-tidy version: $clangVersion"
-          } catch {
-            Write-Host "clang-tidy not found in PATH"
-          }
-          
-          try {
-            $cppcheckVersion = cppcheck --version
-            Write-Host "cppcheck version: $cppcheckVersion"
-          } catch {
-            Write-Host "cppcheck not found in PATH"
-          }
-
-      # 5. CMakeでビルドディレクトリを構成する
-      #    -B build: 'build'という名前のビルドディレクトリを作成
-      #    -DCMAKE_BUILD_TYPE=Debug: Debug構成で設定
+          choco install llvm cppcheck -y --force
+          $LLVM_PATH = "C:\Program Files\LLVM\bin"
+          echo "PATH=$env:PATH;$LLVM_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "LLVM_PATH=$LLVM_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        shell: pwsh
+      
+      # Configure、Build、Testはキャッシュの有無に関わらず実行します。
+      # C++のビルドキャッシュは複雑なため、依存ライブラリのキャッシュが最も効果的です。
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug      # 6. CMakeでプロジェクトをビルドする
-      #    --build build: 'build'ディレクトリをビルド対象に指定
-      #    --config Debug: Debug構成でビルド
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
       - name: Build project
         run: cmake --build build --config Debug
-
-      # 7. 静的解析を実行
-      - name: Run static analysis
+      
+      # 改善点③：静的解析の実行方法を改善
+      # clang-tidyにビルド構成を教え、cppcheckもエラーがあっても継続するようにします。
+      - name: Run Static Analysis
         run: |
-          # 環境変数を再度更新
-          $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("PATH", "User")
-          
-          # clang-tidyで静的解析
-          Write-Host "Running clang-tidy..."
-          try {
-            Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object {
-              Write-Host "Analyzing: $($_.FullName)"
-              & clang-tidy $_.FullName -- -std=c++17
-            }
-          } catch {
-            Write-Host "clang-tidy failed: $($_.Exception.Message)"
-          }
-          
-          # cppcheckで静的解析
-          Write-Host "Running cppcheck..."
-          try {
-            & cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
-          } catch {
-            Write-Host "cppcheck failed: $($_.Exception.Message)"
-          }
-        continue-on-error: true
+          echo "--- Running clang-tidy ---"
+          clang-tidy --version
+          # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
+          clang-tidy-8.exe -p build $(Get-ChildItem -Path . -Filter "*.cpp" -Recurse | ForEach-Object { $_.FullName })
 
-      # 8. CTestを実行して単体テストを走らせる
-      #    --test-dir build: 'build'ディレクトリ内のテストを実行
-      #    --config Debug: Debug構成のテストを実行
+          echo "--- Running cppcheck ---"
+          cppcheck --version
+          cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
+        continue-on-error: true # 静的解析でエラーが出てもワークフローを止めない
+
       - name: Run tests
         run: ctest --test-dir build -C Debug
