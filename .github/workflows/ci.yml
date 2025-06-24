@@ -48,7 +48,7 @@ jobs:
           # cppcheckで静的解析
           Write-Host "Running cppcheck..."
           cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem .
-        continue-on-error: true# 6. CTestを実行して単体テストを走らせる
+        continue-on-error: true    # 6. CTestを実行して単体テストを走らせる
       #    --test-dir build: 'build'ディレクトリ内のテストを実行
       #    --config Debug: Debug構成のテストを実行
       - name: Run tests
