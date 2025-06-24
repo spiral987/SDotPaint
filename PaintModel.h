@@ -5,6 +5,13 @@
 
 #include <vector>
 #include <windows.h> // POINT構造体を使用するために必要
+#include <cstdint>
+
+struct PenPoint
+{
+    POINT point;
+    UINT32 pressure; // ペンの圧力
+};
 
 // アプリケーションのデータとロジックを管理するクラス
 class PaintModel
