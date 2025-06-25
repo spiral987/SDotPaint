@@ -125,7 +125,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // マウスの位置を保持するための変数。static変数を使用して、ウィンドウプロシージャが呼び出されるたびに初期化されないようにする
     static LayerManager layer_manager; // LayerManagerのstaticなインスタンス    // メッセージの種類に応じて処理を分岐
     switch (uMsg)
-    { // ペンでタッチダウンしたときのメッセージ
+    {
+    case WM_CREATE:
+    {
+        // ウィンドウのクライアント領域のサイズを取得
+        RECT rect;
+        GetClientRect(hwnd, &rect);
+
+        // レイヤーを初期化(今回はラスターレイヤー)
+        HDC hdc = GetDC(hwnd);
+        layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc);
+        ReleaseDC(hwnd, hdc);
+        return 0; // 処理したので0を返す
+    }
+
+    case WM_KEYDOWN:
+    {
+        switch (wParam)
+        {
+        case 'E':
+        {
+            layer_manager.setDrawMode(DrawMode::Eraser);
+            break;
+        }
+        case 'Q':
+        {
+            layer_manager.setDrawMode(DrawMode::Pen);
+            break;
+        }
+        }
+        return 0;
+    }
+
+        // ペンでタッチダウンしたときのメッセージ
     case WM_POINTERDOWN:
     {
         // 右ボタンがクリックされた場合はクリア処理

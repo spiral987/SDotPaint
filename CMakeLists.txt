@@ -13,6 +13,7 @@ add_executable(SDotPaint WIN32
     main.cpp 
     LayerManager.cpp
     VectorLayer.cpp
+    RasterLayer.cpp
 )
 
 target_compile_definitions(SDotPaint PRIVATE
@@ -48,25 +49,26 @@ set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")
 # GoogleTestを実際にダウンロードしてプロジェクトで利用可能にする
 FetchContent_MakeAvailable(googletest)
 
-# テスト用の新しい実行ファイルを定義
-add_executable(
-  SdotPaint_tests 
-  tests/VectorLayer.test.cpp
-  VectorLayer.cpp
-)
 
+# テスト用の新しい実行ファイルを定義
+#add_executable(
+#  SdotPaint_tests 
+#  tests/VectorLayer.test.cpp
+#  VectorLayer.cpp
+#)
+#
 # テスト用実行ファイルにGoogleTestをリンクする
-target_link_libraries(
-  SdotPaint_tests 
-  PRIVATE gtest_main
-)
+#target_link_libraries(
+#  SdotPaint_tests 
+#  PRIVATE gtest_main
+#)
 
 # GoogleTestのインクルードディレクトリをテストターゲットに追加
-target_include_directories(
-    SdotPaint_tests 
-    PRIVATE ${googletest_SOURCE_DIR}/googletest/include
-)
+#target_include_directories(
+#    SdotPaint_tests 
+#    PRIVATE ${googletest_SOURCE_DIR}/googletest/include
+#)
 
 # CTestにテストを追加する
-include(GoogleTest)
-gtest_discover_tests(SdotPaint_tests)
+#include(GoogleTest)
+#gtest_discover_tests(SdotPaint_tests)

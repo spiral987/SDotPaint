@@ -9,7 +9,7 @@ private:
 
 public:
     void draw(HDC hdc) const override;
-    void addPoint(const PenPoint &p) override;
+    void addPoint(const PenPoint &p, DrawMode mode) override;
     void clear() override;
 
     void startNewStroke() override;
