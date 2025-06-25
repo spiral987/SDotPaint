@@ -9,7 +9,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #--- 実行ファイルのターゲット定義 ---
-add_executable(SDotPaint WIN32 main.cpp PaintModel.cpp)
+add_executable(SDotPaint WIN32
+    main.cpp 
+    LayerManager.cpp
+    VectorLayer.cpp
+)
 
 target_compile_definitions(SDotPaint PRIVATE
     UNICODE
@@ -38,7 +42,6 @@ FetchContent_Declare(
   GIT_TAG    v1.14.0 
 )
 
-# ★★★ 修正点 ★★★
 # GoogleTestに、我々のプロジェクトと同じランタイムライブラリを使ってもらうための設定
 set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")
 
@@ -48,8 +51,8 @@ FetchContent_MakeAvailable(googletest)
 # テスト用の新しい実行ファイルを定義
 add_executable(
   SdotPaint_tests 
-  tests/PaintModel.test.cpp
-  PaintModel.cpp
+  tests/VectorLayer.test.cpp
+  VectorLayer.cpp
 )
 
 # テスト用実行ファイルにGoogleTestをリンクする
