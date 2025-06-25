@@ -1,16 +1,14 @@
 ﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
-#include <string>
-#include <vector>
-
-#include "PaintModel.h"
+#include "LayerManager.h"
+#include "PenData.h"
 
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理します
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // 描画ポイント追加関数のプロトタイプ宣言
-void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, PaintModel &paint_model);
+void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager);
 
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
@@ -83,7 +81,7 @@ int WINAPI WinMain(
 }
 
 // 共通の描画ポイント追加処理
-void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, PaintModel &paint_model)
+void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager)
 {
 
     // ポインターIDを取得
@@ -98,42 +96,34 @@ void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, PaintModel &paint_
     }
 
     POINT screenPoint = pointerInfo.ptPixelLocation; //* ポインターの画面上の位置を取得
-    ScreenToClient(hwnd, &screenPoint);              //* 画面座標をクライアント座標に変換    // ペンの場合のみ筆圧情報を取得
-    UINT32 pressure = 512;                           // デフォルト筆圧（中間値）
+    ScreenToClient(hwnd, &screenPoint);              //* 画面座標をクライアント座標に変換
+
+    UINT32 pressure = 512; // デフォルト筆圧（中間値）
+
     if (pointerInfo.pointerType == PT_PEN)
     {
         // ペンの詳細情報を取得
         POINTER_PEN_INFO penInfo;
         if (GetPointerPenInfo(pointerId, &penInfo))
         {
-            pressure = penInfo.pressure;
+            POINTER_PEN_INFO penInfo;
 
-            // デバッグ用：筆圧情報を出力
-            wchar_t debugMsg[256];
-            swprintf_s(debugMsg, L"Pen pressure: %d\n", pressure);
-            OutputDebugStringW(debugMsg);
+            // 筆圧値を取得（0-1024の範囲）
+            if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pressure <= 1024)
+            {
+                pressure = penInfo.pressure;
+            }
         }
     }
 
-    // 筆圧値の範囲チェック（0-1024が正常範囲）
-    if (pressure > 1024)
-    {
-        pressure = 1024; // 異常値の場合は最大値に設定
-    }
-
-    // PenPointを作成してモデルに追加
-    PenPoint p;
-    //* 変換後のクライアント座標を使用
-    p.point = screenPoint; // クライアント座標を設定
-    p.pressure = pressure; // 筆圧値を設定
-    paint_model.addPoint(p);
+    layer_manager.addPoint({screenPoint, pressure}); // ペイントモデルにポイントを追加
 }
 
 // ウィンドウプロシージャ（メッセージが発せられたときに呼び出される関数）
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // マウスの位置を保持するための変数。static変数を使用して、ウィンドウプロシージャが呼び出されるたびに初期化されないようにする
-    static PaintModel paint_model; // PaintModelのstaticなインスタンス    // メッセージの種類に応じて処理を分岐
+    static LayerManager layer_manager; // LayerManagerのstaticなインスタンス    // メッセージの種類に応じて処理を分岐
     switch (uMsg)
     { // ペンでタッチダウンしたときのメッセージ
     case WM_POINTERDOWN:
@@ -141,10 +131,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // 右ボタンがクリックされた場合はクリア処理
         if (IS_POINTER_SECONDBUTTON_WPARAM(wParam))
         {
-            paint_model.clearPoints();
+            layer_manager.clear();
             InvalidateRect(hwnd, nullptr, TRUE); // 背景を白でクリア
             return 0;
         }
+
+        layer_manager.startNewStroke();
         // fallthrough - 左ボタンの場合は描画処理へ
     }
     case WM_POINTERUPDATE:
@@ -153,58 +145,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (IS_POINTER_INCONTACT_WPARAM(wParam))
         {
             // ポインターが有効な範囲内かつ接触している場合のみ、描画ポイントを追加
-            AddDrawingPoint(hwnd, wParam, lParam, paint_model);
+            AddDrawingPoint(hwnd, wParam, lParam, layer_manager);
             InvalidateRect(hwnd, nullptr, FALSE); // ウィンドウを再描画するように要求
         }
         return 0; // メッセージを処理したことを示す
-    }
-
-    case WM_RBUTTONDOWN:
-    {
-        // 右クリックで描画をクリア
-        paint_model.clearPoints();
-        InvalidateRect(hwnd, nullptr, TRUE); // 背景を白でクリア
-        return 0;                            // メッセージを処理したことを示す
     }
 
     // ウィンドウが破棄されるときのメッセージ
     case WM_DESTROY:
         PostQuitMessage(0); // メッセージループを終了させる
         return 0;           // ウィンドウを描画する必要があるときのメッセージ
+
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps); // 画面用描画コンテキストを取得
 
-        // 黒いブラシを作成（円の塗りつぶし用）
-        HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
-        HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, blackBrush); // SelectObjectは新しいブラシを選択し、古いブラシを返す
+        layer_manager.draw(hdc);
 
-        // ペンも黒に設定（円の輪郭用）
-        HPEN blackPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-        HPEN oldPen = (HPEN)SelectObject(hdc, blackPen);
-
-        //! 保存されているすべてのマウスの点を描画する==============================================
-        // PaintModelから点のリストを取得
-        for (const auto &penpoint : paint_model.getPoints())
-        {
-            int x = penpoint.point.x;
-            int y = penpoint.point.y;
-            int radius = (penpoint.pressure / 128) + 1; // 筆圧に応じて半径を調整（128で割ることで0-1024の範囲を0-8の範囲に変換）
-
-            // 黒く塗りつぶされた円を描画
-            Ellipse(hdc, x - radius, y - radius, x + radius, y + radius);
-        }
-        //! ================================================================================
-
-        // 作成したブラシを消す前に元のブラシとペンを復元
-        SelectObject(hdc, oldBrush);
-        SelectObject(hdc, oldPen);
-
-        // 作成したブラシとペンを削除（メモリリーク防止）
-        DeleteObject(blackBrush);
-        DeleteObject(blackPen);
-        EndPaint(hwnd, &ps); // 描画を終了
+        EndPaint(hwnd, &ps);
     }
         return 0;
     default:
