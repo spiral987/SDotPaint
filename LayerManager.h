@@ -18,6 +18,7 @@ private:
 
 public:
     LayerManager(); // コンストラクタ
+    explicit LayerManager(std::unique_ptr<ILayer> testLayer);
 
     void createNewRasterLayer(int width, int height, HDC hdc); // ラスターレイヤーを作成する
 

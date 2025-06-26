@@ -7,6 +7,13 @@ LayerManager::LayerManager()
 {
 }
 
+LayerManager::LayerManager(std::unique_ptr<ILayer> testLayer)
+
+{
+    layers_.push_back(std::move(testLayer));
+    activeLayerIndex_ = 0;
+}
+
 void LayerManager::createNewRasterLayer(int width, int height, HDC hdc)
 {
     // 既存のレイヤーをクリア
