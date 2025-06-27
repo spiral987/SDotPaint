@@ -1,13 +1,34 @@
 ﻿#include "LayerManager.h"
 #include "VectorLayer.h"
+#include "RasterLayer.h"
 
 // コンストラクタ デフォルトでベクタレイヤーを一つ作成
 LayerManager::LayerManager()
 {
-    layers_.push_back(std::make_unique<VectorLayer>());
+}
+
+LayerManager::LayerManager(std::unique_ptr<ILayer> testLayer)
+
+{
+    layers_.push_back(std::move(testLayer));
     activeLayerIndex_ = 0;
 }
 
+void LayerManager::createNewRasterLayer(int width, int height, HDC hdc)
+{
+    // 既存のレイヤーをクリア
+    layers_.clear();
+    // 新しいRasterLayerを作成し、リストに追加
+    layers_.push_back(std::make_unique<RasterLayer>(width, height, hdc));
+    activeLayerIndex_ = 0;
+}
+
+void LayerManager::setDrawMode(DrawMode newMode)
+{
+    currentMode_ = newMode;
+}
+
+// レイヤーに処理を依頼する関数たち
 void LayerManager::draw(HDC hdc) const
 {
     if (auto *layer = getActiveLayer())
@@ -20,7 +41,7 @@ void LayerManager::addPoint(const PenPoint &p)
 {
     if (auto *layer = getActiveLayer())
     {
-        layer->addPoint(p);
+        layer->addPoint(p, currentMode_);
     }
 }
 
