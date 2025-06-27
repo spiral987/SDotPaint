@@ -13,6 +13,7 @@ public:
     // 仮想デストラクタは必須です
     virtual ~ILayer() = default;
 
+    virtual void setCustomBrush(const std::vector<POINT> &points) = 0;
     // 純粋仮想関数（このクラスを継承するクラスは必ず実装しなければならない）
     virtual void draw(HDC hdc) const = 0;                        // 描画関数
     virtual void addPoint(const PenPoint &p, DrawMode mode) = 0; // 点を追加する関数

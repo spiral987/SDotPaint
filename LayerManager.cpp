@@ -28,6 +28,14 @@ void LayerManager::setDrawMode(DrawMode newMode)
     currentMode_ = newMode;
 }
 
+void LayerManager::setCustomBrush(const std::vector<POINT> &points)
+{
+    if (auto *layer = getActiveLayer())
+    {
+        layer->setCustomBrush(points);
+    }
+}
+
 // レイヤーに処理を依頼する関数たち
 void LayerManager::draw(HDC hdc) const
 {

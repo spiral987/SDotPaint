@@ -2,6 +2,17 @@
 #include <windows.h>
 #include "LayerManager.h"
 #include "PenData.h"
+#include "GeminiService.h"
+#include <nlohmann/json.hpp>
+#include <iostream>
+#include <io.h>
+#include <fcntl.h>
+
+using json = nlohmann::json;
+
+// UIコントロールのIDを定義
+#define IDC_PROMPT_EDIT 101
+#define IDC_GENERATE_BUTTON 102
 
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理します
@@ -17,6 +28,11 @@ int WINAPI WinMain(
     LPSTR lpszCmdLine,       // コマンドライン引数
     int nShowCmd)            // ウィンドウの表示状態
 {
+    // デバッグ用コンソールを表示
+    AllocConsole();
+    freopen_s((FILE **)stdout, "CONOUT$", "w", stdout);
+    freopen_s((FILE **)stderr, "CONOUT$", "w", stderr);
+
     // 1. ウィンドウクラスの設計と登録
     // ----------------------------------------------------------------
 
@@ -136,6 +152,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HDC hdc = GetDC(hwnd);
         layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc);
         ReleaseDC(hwnd, hdc);
+
+        // テキスト入力用のエディットボックスを作成
+        CreateWindowW(L"EDIT", L"A jagged star", // 初期テキスト
+                      WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
+                      10, 10, 200, 25, // 位置とサイズ (x, y, width, height)
+                      hwnd, (HMENU)IDC_PROMPT_EDIT, nullptr, nullptr);
+
+        // 生成ボタンを作成
+        CreateWindowW(L"BUTTON", L"Generate Brush",
+                      WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                      220, 10, 150, 25, // 位置とサイズ
+                      hwnd, (HMENU)IDC_GENERATE_BUTTON, nullptr, nullptr);
+
         return 0; // 処理したので0を返す
     }
 
@@ -156,6 +185,92 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         return 0;
     }
+    case WM_COMMAND:
+    {
+        // 押されたボタンのIDをチェック
+        if (LOWORD(wParam) == IDC_GENERATE_BUTTON)
+        {
+            // 1. エディットボックスからテキストを取得
+            wchar_t prompt_w[256];
+            GetDlgItemTextW(hwnd, IDC_PROMPT_EDIT, prompt_w, 256);
+
+            // wchar_tからstringに変換
+            char prompt_mb[256];
+            wcstombs_s(nullptr, prompt_mb, sizeof(prompt_mb), prompt_w, _TRUNCATE);
+            std::string prompt(prompt_mb);
+
+            // 2. 環境変数からAPIキーを取得
+            const char *apiKeyEnv = std::getenv("GEMINI_API_KEY");
+            if (apiKeyEnv == nullptr)
+            {
+                MessageBoxW(hwnd, L"APIキーが環境変数に設定されていません。\nGEMINI_API_KEYを設定してください。", L"エラー", MB_OK | MB_ICONERROR);
+                return 0;
+            }
+            std::string apiKey(apiKeyEnv);
+
+            // 3. GeminiServiceを呼び出す
+            GeminiService service(apiKey);
+            std::string jsonResult = service.generateShapeData(prompt);
+
+            // 4. 結果を解析してブラシを生成する ★ここからが新しい処理
+            try
+            {
+                std::cout << "Received result: " << jsonResult << std::endl;
+
+                // まず、返ってきた文字列から前後の```json ```などを取り除く
+                std::string cleanJsonString = jsonResult;
+
+                // ```json から始まる場合
+                size_t jsonStart = cleanJsonString.find("```json");
+                if (jsonStart != std::string::npos)
+                {
+                    jsonStart += 7; // "```json"の長さ
+                    // 改行をスキップ
+                    if (jsonStart < cleanJsonString.length() && cleanJsonString[jsonStart] == '\n')
+                    {
+                        jsonStart++;
+                    }
+
+                    // 終わりの```を見つける
+                    size_t jsonEnd = cleanJsonString.find("```", jsonStart);
+                    if (jsonEnd != std::string::npos)
+                    {
+                        cleanJsonString = cleanJsonString.substr(jsonStart, jsonEnd - jsonStart);
+                    }
+                    else
+                    {
+                        cleanJsonString = cleanJsonString.substr(jsonStart);
+                    }
+                }
+
+                std::cout << "Clean JSON: " << cleanJsonString << std::endl;
+
+                json resultJson = json::parse(cleanJsonString);
+
+                std::vector<POINT> points;
+                for (const auto &item : resultJson["points"])
+                {
+                    points.push_back({item["x"].get<LONG>(), item["y"].get<LONG>()});
+                }
+
+                // LayerManager経由でRasterLayerにブラシ設定を指示
+                if (auto *layer = layer_manager.getActiveLayer())
+                {
+                    layer->setCustomBrush(points);
+                }
+
+                MessageBoxW(hwnd, L"新しいブラシが生成されました！", L"成功", MB_OK);
+            }
+            catch (const json::exception &e)
+            {
+                std::string error_msg = "JSON parsing failed: ";
+                error_msg += e.what();
+                error_msg += "\nReceived data: " + jsonResult;
+                wchar_t error_w[1024];
+                mbstowcs_s(nullptr, error_w, sizeof(error_w) / sizeof(wchar_t), error_msg.c_str(), _TRUNCATE);
+                MessageBoxW(hwnd, error_w, L"エラー", MB_OK | MB_ICONERROR);
+            }
+        }
 
         // ペンでタッチダウンしたときのメッセージ
     case WM_POINTERDOWN:
@@ -201,5 +316,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     default:
         // 自分で処理しないメッセージは、デフォルトの処理に任せる（非常に重要）
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
     }
 }

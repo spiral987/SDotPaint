@@ -15,10 +15,16 @@ private:
 
     POINT lastPoint_ = {-1, -1};
 
+    HBITMAP hCustomBrush_ = nullptr;
+    int brushWidth_ = 64;
+    int brushHeight_ = 64;
+
 public:
     // コンストラクタ、デストラクタ
     RasterLayer(int width, int height, HDC hdc);
     ~RasterLayer();
+
+    void setCustomBrush(const std::vector<POINT> &points) override;
 
     void draw(HDC hdc) const override;
     void addPoint(const PenPoint &p, DrawMode mode) override;

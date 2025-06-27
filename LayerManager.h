@@ -24,6 +24,8 @@ public:
 
     void setDrawMode(DrawMode newMode);
 
+    void setCustomBrush(const std::vector<POINT> &points);
+
     // アクティブなレイヤーに処理を渡す関数たち
     void draw(HDC hdc) const;
     void addPoint(const PenPoint &p);
