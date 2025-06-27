@@ -30,9 +30,12 @@ std::string GeminiService::generateShapeData(const std::string &prompt)
     {
         // Geminiに送信するリクエストボディをJSONで作成
         json requestBody = {
-            {"contents", {{"parts", {// プロンプトを書く
-                                     {"text", "You are a creative shape designer. Based on the user's request \"" + prompt + "\", please generate a list of polygon vertex coordinates that fit within a 64x64 size in JSON format. The format should be {\"points\": [{\"x\":-1, \"y\":-1}, ...]} and each coordinate should be an integer value from 0 to 63."}}}}}};
-
+            {"contents", {{"parts", {{"text", "You are a brush texture designer. "
+                                              "Based on the user's request \"" +
+                                                  prompt + "\", generate parameters for a textured brush that fits within a 64x64 area. "
+                                                           "The parameters should be `density` (integer, 1-100), `dot_size_min` (integer, 1-5), `dot_size_max` (integer, 1-5), `alpha_min` (integer, 0-255), and `alpha_max` (integer, 0-255). "
+                                                           "Please provide the output in JSON format only, like this example for a 'dark pencil': "
+                                                           "{\"density\":80, \"dot_size_min\":1, \"dot_size_max\":2, \"alpha_min\":100, \"alpha_max\":200}"}}}}}};
         std::string requestBodyStr = requestBody.dump();
         std::string pathWithKey = "/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey_;
 

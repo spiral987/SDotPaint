@@ -5,6 +5,15 @@
 #include <windows.h>
 #include <vector>
 
+struct TextureBrushParams
+{
+    int density = 50;
+    int dot_size_min = 1;
+    int dot_size_max = 3;
+    int alpha_min = 100;
+    int alpha_max = 150;
+};
+
 class RasterLayer : public ILayer
 {
 private:
@@ -19,12 +28,16 @@ private:
     int brushWidth_ = 64;
     int brushHeight_ = 64;
 
+    TextureBrushParams textureParams_;
+    HBITMAP hTextureBrush_ = nullptr;
+
 public:
     // コンストラクタ、デストラクタ
     RasterLayer(int width, int height, HDC hdc);
     ~RasterLayer();
 
     void setCustomBrush(const std::vector<POINT> &points) override;
+    void setTextureBrush(const TextureBrushParams &params);
 
     void draw(HDC hdc) const override;
     void addPoint(const PenPoint &p, DrawMode mode) override;

@@ -1,5 +1,6 @@
 #include "RasterLayer.h"
 #include <stdexcept> //ランタイムエラーメッセージのため
+#include <random>    // 乱数生成のために追加
 
 // コンストラクタ ここで画用紙(ビットマップ)を作成する
 RasterLayer::RasterLayer(int width, int height, HDC hdc) : width_(width), height_(height)
@@ -82,8 +83,34 @@ void RasterLayer::setCustomBrush(const std::vector<POINT> &points)
 
 void RasterLayer::addPoint(const PenPoint &p, DrawMode mode)
 {
+    // テクスチャブラシが設定されている場合
+    if (hTextureBrush_)
+    {
+        if (mode == DrawMode::Eraser)
+        {
+            // 消しゴムモードの場合は従来の処理を流用 (またはテクスチャ消しゴムを別途実装)
+            // ... (従来の消しゴム処理)
+            return;
+        }
 
-    if (hCustomBrush_)
+        HDC hBrushDC = CreateCompatibleDC(hMemoryDC_);
+        SelectObject(hBrushDC, hTextureBrush_);
+
+        int destX = p.point.x - brushWidth_ / 2;
+        int destY = p.point.y - brushHeight_ / 2;
+
+        BLENDFUNCTION blendFunc = {};
+        blendFunc.BlendOp = AC_SRC_OVER;
+        blendFunc.SourceConstantAlpha = 255;  // ビットマップのアルファ値を使用
+        blendFunc.AlphaFormat = AC_SRC_ALPHA; // ソースがアルファ値を持つことを示す
+
+        // アルファブレンディングで描画
+        AlphaBlend(hMemoryDC_, destX, destY, brushWidth_, brushHeight_,
+                   hBrushDC, 0, 0, brushWidth_, brushHeight_, blendFunc);
+
+        DeleteDC(hBrushDC);
+    }
+    else if (hCustomBrush_)
     {
         // ブラシ用のデバイスコンテキストを作成
         HDC hBrushDC = CreateCompatibleDC(hMemoryDC_);
@@ -159,4 +186,68 @@ const std::vector<std::vector<PenPoint>> &RasterLayer::getStrokes() const
     // このメソッドが呼ばれないようにするのが理想だが、インターフェースにあるので実装は必要
     static const std::vector<std::vector<PenPoint>> empty_strokes;
     return empty_strokes;
+}
+
+void RasterLayer::setTextureBrush(const TextureBrushParams &params)
+{
+    textureParams_ = params;
+
+    // 既存のブラシを解放
+    if (hTextureBrush_)
+    {
+        DeleteObject(hTextureBrush_);
+        hTextureBrush_ = nullptr;
+    }
+
+    // 32bppのアルファチャンネル付きビットマップを作成
+    BITMAPINFO bmi = {};
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = brushWidth_;
+    bmi.bmiHeader.biHeight = -brushHeight_; // Top-down DIB
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    void *pPixels = nullptr;
+    HDC hdc = GetDC(nullptr);
+    hTextureBrush_ = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pPixels, NULL, 0);
+    ReleaseDC(nullptr, hdc);
+
+    if (!hTextureBrush_)
+        return;
+
+    // 乱数生成の準備
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> pos_dist(0, brushWidth_ - 1);
+    std::uniform_int_distribution<> size_dist(params.dot_size_min, params.dot_size_max);
+    std::uniform_int_distribution<> alpha_dist(params.alpha_min, params.alpha_max);
+
+    // 点の総数を計算
+    int total_dots = (brushWidth_ * brushHeight_ * params.density) / 100;
+
+    // ピクセルデータへのアクセス
+    DWORD *pixels = (DWORD *)pPixels;
+
+    // ランダムな点を描画していく
+    for (int i = 0; i < total_dots; ++i)
+    {
+        int x = pos_dist(gen);
+        int y = pos_dist(gen);
+        int size = size_dist(gen);
+        BYTE alpha = (BYTE)alpha_dist(gen);
+
+        // 円形のブラシエリア内に点を描画
+        int dx_from_center = x - brushWidth_ / 2;
+        int dy_from_center = y - brushHeight_ / 2;
+        if ((dx_from_center * dx_from_center + dy_from_center * dy_from_center) < (brushWidth_ * brushWidth_ / 4))
+        {
+            // 簡単のため、ここでは1x1の点を描画 (sizeに応じた円を描画するとより高品質になる)
+            if (x >= 0 && x < brushWidth_ && y >= 0 && y < brushHeight_)
+            {
+                // BGRA形式でピクセルを設定 (黒い点)
+                pixels[y * brushWidth_ + x] = (alpha << 24) | (0x000000);
+            }
+        }
+    }
 }
