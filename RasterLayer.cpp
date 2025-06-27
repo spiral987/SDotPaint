@@ -40,7 +40,7 @@ void RasterLayer::draw(HDC hdc) const
     BitBlt(hdc, 0, 0, width_, height_, hMemoryDC_, 0, 0, SRCCOPY);
 }
 
-void RasterLayer::addPoint(const PenPoint &p, DrawMode mode)
+void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width)
 {
     // 新しいストロークの最初の点の場合
     if (lastPoint_.x == -1)
@@ -59,9 +59,10 @@ void RasterLayer::addPoint(const PenPoint &p, DrawMode mode)
         color = RGB(0, 0, 0);
     }
 
+    int finalWidth = max(1, static_cast<int>(width * (p.pressure / 1023.0f)));
+
     // 筆圧に応じたペンを作成
-    int penWidth = (p.pressure * 15 / 1024) + 1;
-    HPEN hPen = CreatePen(PS_SOLID, penWidth, color);
+    HPEN hPen = CreatePen(PS_SOLID, finalWidth, color);
     HPEN hOldPen = (HPEN)SelectObject(hMemoryDC_, hPen);
 
     // 直前の点から現在の点まで、メモリDC上のビットマップに線を描く

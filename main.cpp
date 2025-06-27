@@ -1,8 +1,10 @@
 ﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
+#include <CommCtrl.h>
 #include "LayerManager.h"
 #include "PenData.h"
 
+HWND hSlider = nullptr; // スライダーのハンドルを保持
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理します
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -58,6 +60,22 @@ int WINAPI WinMain(
         MessageBoxW(nullptr, L"ウィンドウの生成に失敗しました！", L"エラー", MB_ICONERROR);
         return 0;
     }
+
+    // ★スライダーコントロールの作成
+    hSlider = CreateWindowExW(
+        0,
+        TRACKBAR_CLASSW, // スライダークラス
+        L"Pen Size",
+        WS_CHILD | WS_VISIBLE | TBS_VERT, // 子ウィンドウ・可視・縦方向
+        10, 10,                           // X, Y座標
+        30, 200,                          // 幅, 高さ
+        hwnd,                             // 親ウィンドウ
+        (HMENU)1,                         // コントロールID
+        hInstance,
+        nullptr);
+
+    // スライダーの範囲を設定 (最小値1, 最大値100など)
+    SendMessage(hSlider, TBM_SETRANGE, TRUE, MAKELPARAM(1, 100));
 
     // タッチ対応ウィンドウとして登録する
     EnableMouseInPointer(TRUE);
@@ -146,13 +164,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case 'E':
         {
             layer_manager.setDrawMode(DrawMode::Eraser);
+            SendMessage(hSlider, TBM_SETPOS, TRUE, layer_manager.getCurrentToolWidth()); // スライダーに太さの値を設定する
             break;
         }
         case 'Q':
         {
             layer_manager.setDrawMode(DrawMode::Pen);
+            SendMessage(hSlider, TBM_SETPOS, TRUE, layer_manager.getCurrentToolWidth());
             break;
         }
+        }
+        return 0;
+    }
+
+    case WM_VSCROLL:
+    {
+        // スライダーからのメッセージか確認
+        if ((HWND)lParam == hSlider)
+        {
+            // スライダーの現在の位置を取得
+            int newWidth = SendMessage(hSlider, TBM_GETPOS, 0, 0);
+
+            // 現在のモードに応じて、対応するツールの太さを更新
+            if (layer_manager.getCurrentMode() == DrawMode::Pen)
+            {
+                layer_manager.setPenWidth(newWidth);
+            }
+            else
+            {
+                layer_manager.setEraserWidth(newWidth);
+            }
         }
         return 0;
     }

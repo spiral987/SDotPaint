@@ -23,7 +23,7 @@ public:
         const_cast<MockLayer *>(this)->draw_was_called = true;
     }
 
-    void addPoint(const PenPoint &p, DrawMode mode) override
+    void addPoint(const PenPoint &p, DrawMode mode, int width) override
     {
         addPoint_was_called = true;
         mode_passed = mode; // 渡されたモードを記録

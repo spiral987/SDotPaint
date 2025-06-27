@@ -37,7 +37,7 @@ void VectorLayer::draw(HDC hdc) const
     }
 }
 
-void VectorLayer::addPoint(const PenPoint &p, DrawMode mode)
+void VectorLayer::addPoint(const PenPoint &p, DrawMode mode, int width)
 {
     // ストロークが無ければ何もしない
     if (strokes_.empty())
