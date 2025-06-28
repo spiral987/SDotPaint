@@ -33,6 +33,7 @@ public:
     void createNewRasterLayer(int width, int height, std::wstring name); // ラスターレイヤーを作成する
     void addNewRasterLayer(int width, int height);                       // ラスターレイヤーの作成
     void deleteActiveLayer();                                            // レイヤーの削除
+    void renameLayer(int index, const std::wstring &newname);
 
     // アクティブなレイヤーに処理を渡す関数たち
     void draw(Gdiplus::Graphics *g) const;

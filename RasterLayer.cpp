@@ -113,6 +113,11 @@ const std::wstring &RasterLayer::getName() const
     return name_;
 }
 
+void RasterLayer::setName(const std::wstring &newName)
+{
+    name_ = newName;
+}
+
 // getStrokes: RasterLayerでは使わないので、空のリストを返すダミー実装
 const std::vector<std::vector<PenPoint>> &RasterLayer::getStrokes() const
 {

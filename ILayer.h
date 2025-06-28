@@ -23,6 +23,7 @@ public:
 
     // 純粋仮想関数（このクラスを継承するクラスは必ず実装しなければならない）
     virtual const std::wstring &getName() const = 0;                                        // レイヤー名を取得する関数
+    virtual void setName(const std::wstring &newName) = 0;                                  // レイヤー名をセットする関数
     virtual void draw(Gdiplus::Graphics *g) const = 0;                                      // 描画関数
     virtual void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) = 0; // 点を追加する関数
     virtual void clear() = 0;                                                               // レイヤーをクリアする関数

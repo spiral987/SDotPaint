@@ -35,6 +35,7 @@ public:
     void startNewStroke() override;
 
     const std::wstring &getName() const override;
+    void setName(const std::wstring &newName) override;
 
     // ダミー
     const std::vector<std::vector<PenPoint>> &getStrokes() const override;

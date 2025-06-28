@@ -29,7 +29,7 @@ void LayerManager::addNewRasterLayer(int width, int height)
     createNewRasterLayer(width, height, layerName);
 }
 
-// ★追加: アクティブなレイヤーを削除する
+// アクティブなレイヤーを削除する
 void LayerManager::deleteActiveLayer()
 {
     // レイヤーが1つしかない場合は削除しない
@@ -44,6 +44,14 @@ void LayerManager::deleteActiveLayer()
     if (activeLayerIndex_ >= layers_.size())
     {
         activeLayerIndex_ = (int)layers_.size() - 1;
+    }
+}
+
+void LayerManager::renameLayer(int index, const std::wstring &newName)
+{
+    if (index >= 0 && index < layers_.size())
+    {
+        layers_[index]->setName(newName);
     }
 }
 
