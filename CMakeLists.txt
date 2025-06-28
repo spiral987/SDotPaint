@@ -8,7 +8,7 @@ project(SDotPaint LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#--- 実行ファイルのターゲット定義 ---
+# 実行ファイルのターゲット定義
 add_executable(SDotPaint WIN32
     main.cpp 
     LayerManager.cpp
@@ -26,7 +26,6 @@ target_link_libraries(SDotPaint PRIVATE
 )
 
 
-# ===================================================================
 # 単体テスト (GoogleTest) の設定
 # ===================================================================
 

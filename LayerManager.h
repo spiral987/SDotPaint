@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <memory> //unique_ptr = スマートなポインタ
+#include <string>
 
 // アプリケーションのデータ(レイヤー管理)
 class LayerManager
@@ -23,7 +24,10 @@ public:
     LayerManager(); // コンストラクタ
     explicit LayerManager(std::unique_ptr<ILayer> testLayer);
 
-    void createNewRasterLayer(int width, int height, HDC hdc); // ラスターレイヤーを作成する
+    // レイヤーの追加や削除
+    void createNewRasterLayer(int width, int height, HDC hdc, std::wstring name); // ラスターレイヤーを作成する
+    void addNewRasterLayer(int width, int height, HDC hdc);                       // ラスターレイヤーの作成
+    void deleteActiveLayer();                                                     // レイヤーの削除
 
     // アクティブなレイヤーに処理を渡す関数たち
     void draw(HDC hdc) const;
@@ -36,12 +40,14 @@ public:
     void setPenWidth(int width);
     void setEraserWidth(int width);
     void setPenColor(COLORREF color);
+    void setActiveLayer(int index);
 
     // getter
-    //  現在アクティブなレイヤーを取得
-    ILayer *getActiveLayer() const;
+    ILayer *getActiveLayer() const; //  現在アクティブなレイヤーを取得
     DrawMode getCurrentMode() const;
     COLORREF getPenColor() const;
     // 現在のペンの太さを返す
     int getCurrentToolWidth() const;
+    const std::vector<std::unique_ptr<ILayer>> &getLayers() const; // レイヤー配列を返す
+    int getActiveLayerIndex() const;
 };

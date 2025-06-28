@@ -1,10 +1,10 @@
-#define NOMINMAX
 #include "RasterLayer.h"
 #include <stdexcept> //ランタイムエラーメッセージのため
 #include <algorithm>
 
 // コンストラクタ ここで画用紙(ビットマップ)を作成する
-RasterLayer::RasterLayer(int width, int height, HDC hdc) : width_(width), height_(height)
+RasterLayer::RasterLayer(int width, int height, HDC hdc, std::wstring name)
+    : width_(width), height_(height), name_(name)
 {
     // 1. メモリデバイスコンテキスト(DC)を作成
     hMemoryDC_ = CreateCompatibleDC(hdc);
@@ -79,6 +79,11 @@ void RasterLayer::startNewStroke()
 {
     // 次のaddPointが呼ばれた時に、そこが新しい線の始点となるようにリセット
     lastPoint_ = {-1, -1};
+}
+
+const std::wstring &RasterLayer::getName() const
+{
+    return name_;
 }
 
 // getStrokes: RasterLayerでは使わないので、空のリストを返すダミー実装
