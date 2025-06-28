@@ -9,6 +9,11 @@
 #include <memory> //unique_ptr = スマートなポインタ
 #include <string>
 
+namespace Gdiplus
+{
+    class Graphics;
+}
+
 // アプリケーションのデータ(レイヤー管理)
 class LayerManager
 {
@@ -25,12 +30,13 @@ public:
     explicit LayerManager(std::unique_ptr<ILayer> testLayer);
 
     // レイヤーの追加や削除
-    void createNewRasterLayer(int width, int height, HDC hdc, std::wstring name); // ラスターレイヤーを作成する
-    void addNewRasterLayer(int width, int height, HDC hdc);                       // ラスターレイヤーの作成
-    void deleteActiveLayer();                                                     // レイヤーの削除
+    void createNewRasterLayer(int width, int height, std::wstring name); // ラスターレイヤーを作成する
+    void addNewRasterLayer(int width, int height);                       // ラスターレイヤーの作成
+    void deleteActiveLayer();                                            // レイヤーの削除
+    void renameLayer(int index, const std::wstring &newname);
 
     // アクティブなレイヤーに処理を渡す関数たち
-    void draw(HDC hdc) const;
+    void draw(Gdiplus::Graphics *g) const;
     void addPoint(const PenPoint &p);
     void clear();
     void startNewStroke();

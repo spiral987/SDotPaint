@@ -15,21 +15,21 @@ LayerManager::LayerManager(std::unique_ptr<ILayer> testLayer)
 }
 
 // ★変更: レイヤー作成時に名前を渡す
-void LayerManager::createNewRasterLayer(int width, int height, HDC hdc, std::wstring name)
+void LayerManager::createNewRasterLayer(int width, int height, std::wstring name)
 {
-    layers_.push_back(std::make_unique<RasterLayer>(width, height, hdc, name));
+    layers_.push_back(std::make_unique<RasterLayer>(width, height, name));
     activeLayerIndex_ = (int)layers_.size() - 1;
 }
 
 // ★追加: 新しいラスターレイヤーを追加する
-void LayerManager::addNewRasterLayer(int width, int height, HDC hdc)
+void LayerManager::addNewRasterLayer(int width, int height)
 {
     // 「レイヤーN」形式で名前を生成
     std::wstring layerName = L"レイヤー" + std::to_wstring(layers_.size() + 1);
-    createNewRasterLayer(width, height, hdc, layerName);
+    createNewRasterLayer(width, height, layerName);
 }
 
-// ★追加: アクティブなレイヤーを削除する
+// アクティブなレイヤーを削除する
 void LayerManager::deleteActiveLayer()
 {
     // レイヤーが1つしかない場合は削除しない
@@ -47,13 +47,21 @@ void LayerManager::deleteActiveLayer()
     }
 }
 
+void LayerManager::renameLayer(int index, const std::wstring &newName)
+{
+    if (index >= 0 && index < layers_.size())
+    {
+        layers_[index]->setName(newName);
+    }
+}
+
 // レイヤーに処理を依頼する関数たち
-void LayerManager::draw(HDC hdc) const
+void LayerManager::draw(Gdiplus::Graphics *g) const
 {
     // ★変更: すべてのレイヤーを描画する
     for (const auto &layer : layers_)
     {
-        layer->draw(hdc);
+        layer->draw(g);
     }
 }
 
