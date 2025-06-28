@@ -24,6 +24,7 @@ private:
     int penWidth_ = 5;                            // ペンの太さ
     int eraserWidth_ = 20;                        // 消しゴムの太さ
     COLORREF penColor_ = RGB(0, 0, 0);            // ペンの色
+    int hoveredLayerIndex_ = -1;                  // ホバー中のレイヤーのインデックス
 
 public:
     LayerManager(); // コンストラクタ
@@ -47,6 +48,7 @@ public:
     void setEraserWidth(int width);
     void setPenColor(COLORREF color);
     void setActiveLayer(int index);
+    void setHoveredLayer(int index);
 
     // getter
     ILayer *getActiveLayer() const; //  現在アクティブなレイヤーを取得
@@ -56,4 +58,5 @@ public:
     int getCurrentToolWidth() const;
     const std::vector<std::unique_ptr<ILayer>> &getLayers() const; // レイヤー配列を返す
     int getActiveLayerIndex() const;
+    int getHoveredLayerIndex() const;
 };

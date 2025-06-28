@@ -17,7 +17,7 @@ private:
     std::vector<std::vector<PenPoint>> strokes_;
 
 public:
-    void draw(Gdiplus::Graphics *g) const override;
+    void draw(Gdiplus::Graphics *g, float opacity = 1.0f) const override;
     void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) override;
     void clear() override;
 

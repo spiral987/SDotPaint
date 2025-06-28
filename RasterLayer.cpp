@@ -1,7 +1,9 @@
 #include "RasterLayer.h"
+
 #include <stdexcept> //ランタイムエラーメッセージのため
 #include <algorithm>
 #include <gdiplus.h>
+#include <numeric>
 
 using namespace Gdiplus;
 
@@ -24,12 +26,30 @@ RasterLayer::~RasterLayer()
     // unique_ptrが自動的にhBitmap_を解放する
 }
 
-void RasterLayer::draw(Graphics *g) const
+void RasterLayer::draw(Graphics *g, float opacity) const
 {
     if (g && hBitmap_)
     {
-        // 自身のビットマップを、指定されたGraphicsオブジェクト（＝画面）に描画
-        g->DrawImage(hBitmap_.get(), 0, 0);
+        if (opacity >= 1.0f)
+        {
+            // 不透明度が100%ならそのまま描画
+            g->DrawImage(hBitmap_.get(), 0, 0);
+        }
+        else
+        {
+            // 半透明描画
+            ImageAttributes imageAttr;
+            ColorMatrix colorMatrix = {
+                1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, opacity, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+            imageAttr.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+
+            g->DrawImage(hBitmap_.get(), Rect(0, 0, width_, height_), 0, 0, width_, height_, UnitPixel, &imageAttr);
+        }
     }
 }
 
@@ -116,6 +136,69 @@ const std::wstring &RasterLayer::getName() const
 void RasterLayer::setName(const std::wstring &newName)
 {
     name_ = newName;
+}
+
+COLORREF RasterLayer::getAverageColor() const
+{
+    // ビットマップが存在しない場合はデフォルト色（白）を返す
+    if (!hBitmap_)
+    {
+        return RGB(255, 255, 255);
+    }
+
+    long long totalR = 0;
+    long long totalG = 0;
+    long long totalB = 0;
+    int nonTransparentPixels = 0;
+
+    // ビットマップの領域をロックして、ピクセルデータに直接アクセスする
+    BitmapData bitmapData;
+    Rect rect(0, 0, width_, height_);
+    hBitmap_->LockBits(&rect, ImageLockModeRead, PixelFormat32bppARGB, &bitmapData);
+
+    // ピクセルデータの先頭ポインタを取得
+    BYTE *pixels = (BYTE *)bitmapData.Scan0;
+
+    for (int y = 0; y < height_; y++)
+    {
+        // y行目の先頭のピクセルへのポインタ
+        ARGB *line = (ARGB *)(pixels + y * bitmapData.Stride);
+
+        for (int x = 0; x < width_; x++)
+        {
+            // (x, y) のピクセル色 (ARGB形式)
+            ARGB color = line[x];
+
+            // アルファ値（透明度）を取得
+            BYTE alpha = (color >> 24) & 0xff;
+
+            // 完全に透明ではないピクセルのみを計算対象にする
+            if (alpha > 0)
+            {
+                totalB += (color >> 0) & 0xff;
+                totalG += (color >> 8) & 0xff;
+                totalR += (color >> 16) & 0xff;
+                nonTransparentPixels++;
+            }
+        }
+    }
+
+    // ビットマップのロックを解除（非常に重要！）
+    hBitmap_->UnlockBits(&bitmapData);
+
+    // 色が描画されているピクセルが存在する場合
+    if (nonTransparentPixels > 0)
+    {
+        BYTE avgR = (BYTE)(totalR / nonTransparentPixels);
+        BYTE avgG = (BYTE)(totalG / nonTransparentPixels);
+        BYTE avgB = (BYTE)(totalB / nonTransparentPixels);
+        return RGB(avgR, avgG, avgB);
+    }
+    else
+    {
+        // 何も描画されていない場合は、デフォルト色（白）を返す
+        return RGB(255, 255, 255);
+    }
 }
 
 // getStrokes: RasterLayerでは使わないので、空のリストを返すダミー実装
