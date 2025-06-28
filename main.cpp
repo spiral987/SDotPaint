@@ -5,8 +5,17 @@
 #include "LayerManager.h"
 #include "PenData.h"
 
+// UIコントロールのIDを定義
+#define ID_ADD_LAYER_BUTTON 1001
+#define ID_DELETE_LAYER_BUTTON 1002
+#define ID_LAYER_LISTBOX 1003
+
+// UIコントロールのハンドルを追加
 HWND hSlider = nullptr;      // スライダーのハンドルを保持
 HWND hStaticValue = nullptr; // 数値表示用
+HWND hLayerList = nullptr;   // レイヤーリストボックス
+HWND hAddButton = nullptr;   // 追加ボタン
+HWND hDelButton = nullptr;   // 削除ボタン
 
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理
@@ -14,6 +23,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // 描画ポイント追加関数のプロトタイプ宣言
 void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager);
+
+// レイヤーリストを更新するヘルパー関数のプロトタイプ宣言
+void UpdateLayerList(HWND hwnd, LayerManager &layerManager);
 
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
@@ -64,13 +76,34 @@ int WINAPI WinMain(
         return 0;
     }
 
+    // 追加ボタン
+    hAddButton = CreateWindowExW(
+        0, L"BUTTON", L"レイヤー追加",
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        10, 10, 100, 30, hwnd, (HMENU)ID_ADD_LAYER_BUTTON, hInstance, NULL);
+
+    // 削除ボタン
+    hDelButton = CreateWindowExW(
+        0, L"BUTTON", L"レイヤー削除",
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        120, 10, 100, 30, hwnd, (HMENU)ID_DELETE_LAYER_BUTTON, hInstance, NULL);
+
+    // レイヤーリストボックス (右側に配置)
+    RECT clientRect;
+    GetClientRect(hwnd, &clientRect);
+    hLayerList = CreateWindowExW(
+        WS_EX_CLIENTEDGE, L"LISTBOX", L"",
+        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+        clientRect.right - 200, 10, 190, 200, // 右端から200px幅で配置
+        hwnd, (HMENU)ID_LAYER_LISTBOX, hInstance, NULL);
+
     // スライダーコントロールの作成
     hSlider = CreateWindowExW(
         0,
         TRACKBAR_CLASSW, // スライダークラス
         L"Pen Size",
         WS_CHILD | WS_VISIBLE | TBS_VERT, // 子ウィンドウ・可視・縦方向
-        10, 10,                           // X, Y座標
+        10, 50,                           // X, Y座標
         30, 500,                          // 幅, 高さ
         hwnd,                             // 親ウィンドウ
         (HMENU)1,                         // コントロールID
@@ -83,9 +116,9 @@ int WINAPI WinMain(
     hStaticValue = CreateWindowExW(
         0,
         L"STATIC", // コントロールのクラス名
-        L"5",      // ★初期テキスト（ペンの初期値に合わせる）
+        L"5",      // 初期テキスト（ペンの初期値に合わせる）
         WS_CHILD | WS_VISIBLE,
-        45, 10,   // ★X, Y座標（スライダーの右隣あたりに配置）
+        45, 50,   // X, Y座標（スライダーの右隣あたりに配置）
         50, 20,   // 幅, 高さ
         hwnd,     // 親ウィンドウ
         (HMENU)2, // コントロールID（他と被らないように）
@@ -152,6 +185,27 @@ void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &laye
     layer_manager.addPoint({screenPoint, pressure}); // ペイントモデルにポイントを追加
 }
 
+// レイヤーリストボックスを更新する関数
+void UpdateLayerList(HWND hwnd, LayerManager &layerManager)
+{
+    // リストボックスをクリア
+    SendMessage(hLayerList, LB_RESETCONTENT, 0, 0);
+
+    // LayerManagerからレイヤーのリストを取得してリストボックスに追加
+    const auto &layers = layerManager.getLayers();
+    for (const auto &layer : layers)
+    {
+        SendMessage(hLayerList, LB_ADDSTRING, 0, (LPARAM)layer->getName().c_str());
+    }
+
+    // 現在アクティブなレイヤーを選択状態にする
+    int activeIndex = layerManager.getActiveLayerIndex();
+    SendMessage(hLayerList, LB_SETCURSEL, activeIndex, 0);
+
+    // ウィンドウ全体を再描画
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 // ウィンドウプロシージャ（メッセージが発せられたときに呼び出される関数）
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -167,9 +221,55 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // レイヤーを初期化(今回はラスターレイヤー)
         HDC hdc = GetDC(hwnd);
-        layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc);
+
+        // 最初のレイヤーを追加し、リストを更新
+        layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc, L"レイヤー1");
         ReleaseDC(hwnd, hdc);
-        return 0; // 処理したので0を返す
+
+        // リストボックスを初期更新
+        UpdateLayerList(hwnd, layer_manager);
+        return 0;
+    }
+
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        int wmEvent = HIWORD(wParam);
+
+        switch (wmId)
+        {
+        case ID_ADD_LAYER_BUTTON:
+        {
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            HDC hdc = GetDC(hwnd);
+            layer_manager.addNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc);
+            ReleaseDC(hwnd, hdc);
+            UpdateLayerList(hwnd, layer_manager); // リストを更新
+            break;
+        }
+        case ID_DELETE_LAYER_BUTTON:
+        {
+            layer_manager.deleteActiveLayer();
+            UpdateLayerList(hwnd, layer_manager); // リストを更新
+            break;
+        }
+        case ID_LAYER_LISTBOX:
+        {
+            // 選択が変更された場合
+            if (wmEvent == LBN_SELCHANGE)
+            {
+                int selectedIndex = SendMessage(hLayerList, LB_GETCURSEL, 0, 0);
+                if (selectedIndex != LB_ERR)
+                {
+                    layer_manager.setActiveLayer(selectedIndex);
+                    InvalidateRect(hwnd, NULL, FALSE); // 再描画
+                }
+            }
+            break;
+        }
+        }
+        return 0;
     }
 
     case WM_KEYDOWN:

@@ -5,15 +5,18 @@
 
 #include <windows.h>
 #include <vector>
+#include <string>
 
 // すべてのレイヤーの基底となるインターフェースクラス
+// LayerManagerでそれぞれのレイヤーを呼び出す際に、Layerクラスで実装しておくべき関数を定義する
 class ILayer
 {
 public:
-    // 仮想デストラクタは必須です
+    // 仮想デストラクタは必須
     virtual ~ILayer() = default;
 
     // 純粋仮想関数（このクラスを継承するクラスは必ず実装しなければならない）
+    virtual const std::wstring &getName() const = 0;                                        // レイヤー名を取得する関数
     virtual void draw(HDC hdc) const = 0;                                                   // 描画関数
     virtual void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) = 0; // 点を追加する関数
     virtual void clear() = 0;                                                               // レイヤーをクリアする関数
