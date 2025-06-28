@@ -23,11 +23,6 @@ void LayerManager::createNewRasterLayer(int width, int height, HDC hdc)
     activeLayerIndex_ = 0;
 }
 
-void LayerManager::setDrawMode(DrawMode newMode)
-{
-    currentMode_ = newMode;
-}
-
 // レイヤーに処理を依頼する関数たち
 void LayerManager::draw(HDC hdc) const
 {
@@ -41,7 +36,7 @@ void LayerManager::addPoint(const PenPoint &p)
 {
     if (auto *layer = getActiveLayer())
     {
-        layer->addPoint(p, currentMode_);
+        layer->addPoint(p, currentMode_, getCurrentToolWidth());
     }
 }
 
@@ -61,6 +56,21 @@ void LayerManager::startNewStroke()
     }
 }
 
+void LayerManager::setDrawMode(DrawMode newMode)
+{
+    currentMode_ = newMode;
+}
+
+void LayerManager::setPenWidth(int width)
+{
+    penWidth_ = width;
+}
+
+void LayerManager::setEraserWidth(int width)
+{
+    eraserWidth_ = width;
+}
+
 ILayer *LayerManager::getActiveLayer() const
 {
     if (activeLayerIndex_ >= 0 && activeLayerIndex_ < layers_.size())
@@ -68,4 +78,21 @@ ILayer *LayerManager::getActiveLayer() const
         return layers_[activeLayerIndex_].get();
     }
     return nullptr;
+}
+
+DrawMode LayerManager::getCurrentMode() const
+{
+    return currentMode_;
+}
+
+int LayerManager::getCurrentToolWidth() const
+{
+    if (currentMode_ == DrawMode::Pen)
+    {
+        return penWidth_;
+    }
+    else
+    {
+        return eraserWidth_;
+    }
 }

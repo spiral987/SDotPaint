@@ -1,10 +1,15 @@
 ﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
+#include <CommCtrl.h>
+#include <string>
 #include "LayerManager.h"
 #include "PenData.h"
 
+HWND hSlider = nullptr;      // スライダーのハンドルを保持
+HWND hStaticValue = nullptr; // 数値表示用
+
 // ウィンドウプロシージャのプロトタイプ宣言
-// この関数がウィンドウへの様々なメッセージ（イベント）を処理します
+// この関数がウィンドウへの様々なメッセージ（イベント）を処理
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // 描画ポイント追加関数のプロトタイプ宣言
@@ -17,7 +22,7 @@ int WINAPI WinMain(
     LPSTR lpszCmdLine,       // コマンドライン引数
     int nShowCmd)            // ウィンドウの表示状態
 {
-    // 1. ウィンドウクラスの設計と登録
+    // ウィンドウクラスの設計と登録
     // ----------------------------------------------------------------
 
     const wchar_t CLASS_NAME[] = L"Sample Window Class"; // ウィンドウクラス名
@@ -37,7 +42,7 @@ int WINAPI WinMain(
         return 0;
     }
 
-    // 2. ウィンドウの生成
+    // ウィンドウの生成
     // ----------------------------------------------------------------
 
     HWND hwnd = CreateWindowExW(
@@ -59,6 +64,34 @@ int WINAPI WinMain(
         return 0;
     }
 
+    // スライダーコントロールの作成
+    hSlider = CreateWindowExW(
+        0,
+        TRACKBAR_CLASSW, // スライダークラス
+        L"Pen Size",
+        WS_CHILD | WS_VISIBLE | TBS_VERT, // 子ウィンドウ・可視・縦方向
+        10, 10,                           // X, Y座標
+        30, 500,                          // 幅, 高さ
+        hwnd,                             // 親ウィンドウ
+        (HMENU)1,                         // コントロールID
+        hInstance,
+        nullptr);
+
+    SendMessage(hSlider, TBM_SETRANGE, TRUE, MAKELPARAM(1, 100)); // スライダーの範囲を設定 (最小値1, 最大値100）
+    SendMessage(hSlider, TBM_SETPOS, TRUE, 5);                    // 初期位置を5に設定
+
+    hStaticValue = CreateWindowExW(
+        0,
+        L"STATIC", // コントロールのクラス名
+        L"5",      // ★初期テキスト（ペンの初期値に合わせる）
+        WS_CHILD | WS_VISIBLE,
+        45, 10,   // ★X, Y座標（スライダーの右隣あたりに配置）
+        50, 20,   // 幅, 高さ
+        hwnd,     // 親ウィンドウ
+        (HMENU)2, // コントロールID（他と被らないように）
+        hInstance,
+        nullptr);
+
     // タッチ対応ウィンドウとして登録する
     EnableMouseInPointer(TRUE);
 
@@ -66,7 +99,7 @@ int WINAPI WinMain(
     ShowWindow(hwnd, nShowCmd);
     UpdateWindow(hwnd);
 
-    // 3. メッセージループ（ウインドウがメッセージの発生を監視するためのループ）
+    // メッセージループ（ウインドウがメッセージの発生を監視するためのループ）
     // ----------------------------------------------------------------
 
     MSG msg = {};
@@ -146,13 +179,51 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case 'E':
         {
             layer_manager.setDrawMode(DrawMode::Eraser);
+            { // 変数スコープを明確にするための括弧
+                int width = layer_manager.getCurrentToolWidth();
+                SendMessage(hSlider, TBM_SETPOS, TRUE, width); // ペンのふとさをスライダーに適用
+                // テキストも更新
+                SetWindowTextW(hStaticValue, std::to_wstring(width).c_str());
+            }
             break;
         }
         case 'Q':
         {
             layer_manager.setDrawMode(DrawMode::Pen);
+            {
+                int width = layer_manager.getCurrentToolWidth();
+                SendMessage(hSlider, TBM_SETPOS, TRUE, width);
+                SetWindowTextW(hStaticValue, std::to_wstring(width).c_str());
+            }
             break;
         }
+        }
+        return 0;
+    }
+
+    case WM_VSCROLL:
+    {
+        // スライダーからのメッセージか確認
+        if ((HWND)lParam == hSlider)
+        {
+            // スライダーの現在の位置を取得
+            int newWidth = SendMessage(hSlider, TBM_GETPOS, 0, 0);
+
+            // 現在のモードに応じて、対応するツールの太さを更新
+            if (layer_manager.getCurrentMode() == DrawMode::Pen)
+            {
+                layer_manager.setPenWidth(newWidth);
+            }
+            else
+            {
+                layer_manager.setEraserWidth(newWidth);
+            }
+
+            // 静的テキストの表示を更新
+            SetWindowTextW(hStaticValue, std::to_wstring(newWidth).c_str());
+
+            // フォーカスをメインウィンドウに戻す(これが無いとスライダーから抜け出せなくなる)
+            SetFocus(hwnd);
         }
         return 0;
     }
