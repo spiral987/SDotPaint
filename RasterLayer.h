@@ -37,6 +37,6 @@ public:
     const std::wstring &getName() const override;
     void setName(const std::wstring &newName) override;
 
-    // ダミー
-    const std::vector<std::vector<PenPoint>> &getStrokes() const override;
+    COLORREF getAverageColor() const override;                             // 平均色を返す
+    const std::vector<std::vector<PenPoint>> &getStrokes() const override; // ダミー
 };

@@ -29,5 +29,6 @@ public:
     virtual void clear() = 0;                                                               // レイヤーをクリアする関数
     virtual void startNewStroke() = 0;                                                      // 新しい線が始まる命令
 
+    virtual COLORREF getAverageColor() const = 0;                             // レイヤーの平均色を取得
     virtual const std::vector<std::vector<PenPoint>> &getStrokes() const = 0; // 点のリストを取得する関数(テスト用)
 };

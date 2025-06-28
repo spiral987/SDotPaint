@@ -54,6 +54,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // リストボックスのサブクラスプロシージャ
 LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
+// 背景色に応じてテキスト色を決定する関数
+COLORREF GetContrastingTextColor(COLORREF bgColor);
+
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
     HINSTANCE hInstance,     // プログラムを識別するためのインスタンスハンドル
@@ -152,6 +155,13 @@ void UpdateLayerList(HWND hwnd, LayerManager &layerManager)
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+COLORREF GetContrastingTextColor(COLORREF bgColor)
+{
+    // 背景色の明るさを計算 (簡易的な方法)
+    int brightness = (GetRValue(bgColor) * 299 + GetGValue(bgColor) * 587 + GetBValue(bgColor) * 114) / 1000;
+    return (brightness > 128) ? RGB(0, 0, 0) : RGB(255, 255, 255);
+}
+
 // ウィンドウプロシージャ（メッセージが発せられたときに呼び出される関数）
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -183,7 +193,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         GetClientRect(hwnd, &clientRect);
         hLayerList = CreateWindowExW(
             WS_EX_CLIENTEDGE, L"LISTBOX", L"",
-            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY,
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_OWNERDRAWFIXED,
             clientRect.right - 200, 10, 190, 200, // 右端から200px幅で配置
             hwnd, (HMENU)ID_LAYER_LISTBOX, hInstance, NULL);
 
@@ -232,6 +242,50 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         UpdateLayerList(hwnd, layer_manager);
 
         return 0;
+    }
+
+    case WM_DRAWITEM:
+    {
+        // このメッセージがレイヤーリストボックスからのものか確認
+        if ((UINT)wParam == ID_LAYER_LISTBOX)
+        {
+            DRAWITEMSTRUCT *pdis = (DRAWITEMSTRUCT *)lParam;
+
+            // 描画対象の項目がない場合（リストが空など）は何もしない
+            if (pdis->itemID == -1)
+            {
+                return TRUE;
+            }
+
+            // 1. 描画対象のレイヤーを取得
+            const auto &layers = layer_manager.getLayers();
+            const auto &layer = layers[pdis->itemID];
+
+            // 2. レイヤーの平均色を取得
+            COLORREF bgColor = layer->getAverageColor();
+
+            // 3. 背景色から、見やすいテキスト色を決定
+            COLORREF textColor = GetContrastingTextColor(bgColor);
+
+            // 4. 背景を描画
+            HBRUSH hBrush = CreateSolidBrush(bgColor);
+            FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+            DeleteObject(hBrush);
+
+            // 5. テキスト（レイヤー名）を描画
+            SetTextColor(pdis->hDC, textColor);
+            SetBkMode(pdis->hDC, TRANSPARENT); // テキストの背景を透明にする
+            DrawTextW(pdis->hDC, layer->getName().c_str(), -1, &pdis->rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+            // 6. 項目が選択されている場合は、フォーカス用の点線の四角形を描画
+            if (pdis->itemState & ODS_SELECTED)
+            {
+                DrawFocusRect(pdis->hDC, &pdis->rcItem);
+            }
+
+            return TRUE; // メッセージを処理したことを示す
+        }
+        break;
     }
 
     // Altキーを離したときの処理
@@ -500,76 +554,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_POINTERUPDATE:
     {
-        OutputDebugStringW(L"[1] WM_MOUSEMOVE received.\n");
-
-        POINTER_PEN_INFO penInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (!GetPointerPenInfo(pointerId, &penInfo))
-            break;
-        if (penInfo.pointerInfo.pointerType != PT_PEN)
-            break;
-
-        // --- ペンが画面に触れている時（描画処理）---
+        // ペンが画面に触れている時（描画処理）のみを処理する
         if (IS_POINTER_INCONTACT_WPARAM(wParam))
         {
-            POINT p = penInfo.pointerInfo.ptPixelLocation;
-            ScreenToClient(hwnd, &p);
-            UINT32 pressure = penInfo.pressure;
-
-            layer_manager.addPoint({p.x, p.y, pressure});
-            InvalidateRect(hwnd, NULL, FALSE);
-        }
-        // --- ペンがホバー状態の時（Alt+ホバー処理）---
-        else
-        {
-            // Altキーが押されているか？
-            if (GetKeyState(VK_MENU) < 0)
+            POINTER_PEN_INFO penInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+            if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
             {
-                OutputDebugStringW(L"  [2] Alt key is pressed.\n");
+                POINT p = penInfo.pointerInfo.ptPixelLocation;
+                ScreenToClient(hwnd, &p);
+                UINT32 pressure = penInfo.pressure;
 
-                POINT pt = penInfo.pointerInfo.ptPixelLocation; // スクリーン座標
-                ScreenToClient(hwnd, &pt);                      // メインウィンドウのクライアント座標に変換
-                HWND hChildUnderCursor = ChildWindowFromPoint(hwnd, pt);
+                layer_manager.addPoint({p.x, p.y, pressure});
 
-                // カーソルはリストボックスの上にあるか？
-                if (hChildUnderCursor == hLayerList)
-                {
+                // 親ウィンドウ（キャンバス）を再描画
+                InvalidateRect(hwnd, NULL, FALSE);
 
-                    // 3. カーソルがリストボックス上にあることを確認
-                    OutputDebugStringW(L"    [3] Cursor is over the ListBox.\n");
-
-                    ScreenToClient(hLayerList, &penInfo.pointerInfo.ptPixelLocation); // リストボックスのクライアント座標に変換
-                    POINT listbox_pt = penInfo.pointerInfo.ptPixelLocation;
-
-                    DWORD itemIndexResult = SendMessage(hLayerList, LB_ITEMFROMPOINT, 0, MAKELPARAM(listbox_pt.x, listbox_pt.y));
-                    int newHoveredIndex = (HIWORD(itemIndexResult) == 0) ? LOWORD(itemIndexResult) : -1;
-
-                    if (newHoveredIndex != layer_manager.getHoveredLayerIndex())
-                    {
-                        wchar_t debugStr[256];
-                        layer_manager.setHoveredLayer(newHoveredIndex);
-                        swprintf_s(debugStr, L"      [4] Hover Index Changed to: %d\n", newHoveredIndex);
-                        InvalidateRect(hwnd, NULL, FALSE);
-                    }
-                }
-                else // カーソルはリストボックスの外
-                {
-                    if (layer_manager.getHoveredLayerIndex() != -1)
-                    {
-                        layer_manager.setHoveredLayer(-1);
-                        InvalidateRect(hwnd, NULL, FALSE);
-                    }
-                }
-            }
-            else // Altキーが押されていない
-            {
-                if (layer_manager.getHoveredLayerIndex() != -1)
-                {
-                    layer_manager.setHoveredLayer(-1);
-                    InvalidateRect(hwnd, NULL, FALSE);
-                }
+                // レイヤーリストボックスも再描画するよう依頼する
+                InvalidateRect(hLayerList, NULL, FALSE);
             }
         }
+        // ホバー時の処理は LayerListProc に移譲したので、ここでは何もしない
         return 0;
     }
 
