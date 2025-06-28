@@ -1,5 +1,4 @@
 ﻿#include "LayerManager.h"
-#include "VectorLayer.h"
 #include "RasterLayer.h"
 
 // コンストラクタ デフォルトでベクタレイヤーを一つ作成
@@ -14,14 +13,14 @@ LayerManager::LayerManager(std::unique_ptr<ILayer> testLayer)
     activeLayerIndex_ = 0;
 }
 
-// ★変更: レイヤー作成時に名前を渡す
+// レイヤー作成時に名前を渡す
 void LayerManager::createNewRasterLayer(int width, int height, std::wstring name)
 {
     layers_.push_back(std::make_unique<RasterLayer>(width, height, name));
     activeLayerIndex_ = (int)layers_.size() - 1;
 }
 
-// ★追加: 新しいラスターレイヤーを追加する
+// 新しいラスターレイヤーを追加する
 void LayerManager::addNewRasterLayer(int width, int height)
 {
     // 「レイヤーN」形式で名前を生成
@@ -58,10 +57,22 @@ void LayerManager::renameLayer(int index, const std::wstring &newName)
 // レイヤーに処理を依頼する関数たち
 void LayerManager::draw(Gdiplus::Graphics *g) const
 {
-    // ★変更: すべてのレイヤーを描画する
-    for (const auto &layer : layers_)
+    // すべてのレイヤーを描画する
+    // ホバー状態に応じて不透明度を変えて描画
+    for (int i = 0; i < layers_.size(); ++i)
     {
-        layer->draw(g);
+        if (layers_[i])
+        {
+            float opacity = 1.0f;
+
+            // Altキーが押されていて、他のレイヤーがホバーされている場合
+            if (hoveredLayerIndex_ != -1 && hoveredLayerIndex_ != static_cast<int>(i))
+            {
+                opacity = 0.05f; // 5%の不透明度
+            }
+
+            layers_[i]->draw(g, opacity);
+        }
     }
 }
 
@@ -124,6 +135,16 @@ void LayerManager::setActiveLayer(int index)
     }
 }
 
+void LayerManager::setHoveredLayer(int index)
+{
+    if (hoveredLayerIndex_ != index)
+    {
+        hoveredLayerIndex_ = index;
+        std::string debug = "Hovered layer set to: " + std::to_string(index) + "\n";
+        OutputDebugStringA(debug.c_str());
+    }
+}
+
 // getter
 
 ILayer *LayerManager::getActiveLayer() const
@@ -165,4 +186,9 @@ const std::vector<std::unique_ptr<ILayer>> &LayerManager::getLayers() const
 int LayerManager::getActiveLayerIndex() const
 {
     return activeLayerIndex_;
+}
+
+int LayerManager::getHoveredLayerIndex() const
+{
+    return hoveredLayerIndex_;
 }

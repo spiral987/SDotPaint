@@ -32,17 +32,17 @@ target_link_libraries(SDotPaint PRIVATE
 # ===================================================================
 
 # CTest（CMakeのテスト機能）を有効化
-enable_testing()
+#enable_testing()
 
 # FetchContentモジュールをインクルード
-include(FetchContent)
+#include(FetchContent)
 
 # GoogleTestの情報を宣言 (ダウンロード元を指定)
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG    v1.14.0 
-)
+#FetchContent_Declare(
+#  googletest
+#  GIT_REPOSITORY https://github.com/google/googletest.git
+#  GIT_TAG    v1.14.0 
+#)
 
 # GoogleTestに、我々のプロジェクトと同じランタイムライブラリを使ってもらうための設定
 #set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")

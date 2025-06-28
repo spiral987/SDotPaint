@@ -24,12 +24,30 @@ RasterLayer::~RasterLayer()
     // unique_ptrが自動的にhBitmap_を解放する
 }
 
-void RasterLayer::draw(Graphics *g) const
+void RasterLayer::draw(Graphics *g, float opacity) const
 {
     if (g && hBitmap_)
     {
-        // 自身のビットマップを、指定されたGraphicsオブジェクト（＝画面）に描画
-        g->DrawImage(hBitmap_.get(), 0, 0);
+        if (opacity >= 1.0f)
+        {
+            // 不透明度が100%ならそのまま描画
+            g->DrawImage(hBitmap_.get(), 0, 0);
+        }
+        else
+        {
+            // 半透明描画
+            ImageAttributes imageAttr;
+            ColorMatrix colorMatrix = {
+                1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, opacity, 0.0f,
+                0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+
+            imageAttr.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
+
+            g->DrawImage(hBitmap_.get(), Rect(0, 0, width_, height_), 0, 0, width_, height_, UnitPixel, &imageAttr);
+        }
     }
 }
 

@@ -6,7 +6,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             
-            // ★ 重要：実際のexeファイルの直接パスを指定
+            // exeファイルの直接パスを指定
             "program": "${workspaceFolder}/build/Debug/SDotPaint.exe",
 
             "args": [],
@@ -15,7 +15,7 @@
             
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false
+            "console": "internalConsole",
         }
     ]
 }
