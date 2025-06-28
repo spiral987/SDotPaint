@@ -36,7 +36,12 @@ void LayerManager::addPoint(const PenPoint &p)
 {
     if (auto *layer = getActiveLayer())
     {
-        layer->addPoint(p, currentMode_, getCurrentToolWidth());
+        COLORREF drawColor = RGB(255, 255, 255);
+        if (currentMode_ == DrawMode::Pen) // ペンモードならプライベートフィールドの色を使用する
+        {
+            drawColor = getPenColor();
+        }
+        layer->addPoint(p, currentMode_, getCurrentToolWidth(), drawColor);
     }
 }
 
@@ -56,6 +61,8 @@ void LayerManager::startNewStroke()
     }
 }
 
+// setter
+
 void LayerManager::setDrawMode(DrawMode newMode)
 {
     currentMode_ = newMode;
@@ -71,6 +78,13 @@ void LayerManager::setEraserWidth(int width)
     eraserWidth_ = width;
 }
 
+void LayerManager::setPenColor(COLORREF color)
+{
+    penColor_ = color;
+}
+
+// getter
+
 ILayer *LayerManager::getActiveLayer() const
 {
     if (activeLayerIndex_ >= 0 && activeLayerIndex_ < layers_.size())
@@ -83,6 +97,11 @@ ILayer *LayerManager::getActiveLayer() const
 DrawMode LayerManager::getCurrentMode() const
 {
     return currentMode_;
+}
+
+COLORREF LayerManager::getPenColor() const
+{
+    return penColor_;
 }
 
 int LayerManager::getCurrentToolWidth() const
