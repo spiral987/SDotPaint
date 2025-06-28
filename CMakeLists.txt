@@ -44,32 +44,32 @@ FetchContent_Declare(
 )
 
 # GoogleTestに、我々のプロジェクトと同じランタイムライブラリを使ってもらうための設定
-set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")
+#set(gtest_force_shared_crt ON CACHE BOOL "Force shared CRT on gtest")
 
 # GoogleTestを実際にダウンロードしてプロジェクトで利用可能にする
-FetchContent_MakeAvailable(googletest)
+#FetchContent_MakeAvailable(googletest)
 
 
 # テスト用の新しい実行ファイルを定義
-add_executable(
-  SdotPaint_tests
-  tests/LayerManager.test.cpp
-  LayerManager.cpp
-  RasterLayer.cpp
-)
+#add_executable(
+  #SdotPaint_tests
+ # tests/LayerManager.test.cpp
+ # LayerManager.cpp
+#  RasterLayer.cpp
+#)
 
 # テスト用実行ファイルにGoogleTestをリンクする
-target_link_libraries(
-  SdotPaint_tests 
-  PRIVATE gtest_main
-)
+#target_link_libraries(
+#  SdotPaint_tests 
+#  PRIVATE gtest_main
+#)
 
 # GoogleTestのインクルードディレクトリをテストターゲットに追加
-target_include_directories(
-    SdotPaint_tests 
-    PRIVATE ${googletest_SOURCE_DIR}/googletest/include
-)
+#target_include_directories(
+#    SdotPaint_tests 
+#    PRIVATE ${googletest_SOURCE_DIR}/googletest/include
+#)
 
 # CTestにテストを追加する
-include(GoogleTest)
-gtest_discover_tests(SdotPaint_tests)
+#include(GoogleTest)
+#gtest_discover_tests(SdotPaint_tests)

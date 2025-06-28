@@ -1,5 +1,7 @@
+#define NOMINMAX
 #include "RasterLayer.h"
 #include <stdexcept> //ランタイムエラーメッセージのため
+#include <algorithm>
 
 // コンストラクタ ここで画用紙(ビットマップ)を作成する
 RasterLayer::RasterLayer(int width, int height, HDC hdc) : width_(width), height_(height)
@@ -59,7 +61,7 @@ void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width)
         color = RGB(0, 0, 0);
     }
 
-    int finalWidth = max(1, static_cast<int>(width * (p.pressure / 1023.0f)));
+    int finalWidth = (std::max)(1, static_cast<int>(width * (p.pressure / 1023.0f)));
 
     // 筆圧に応じたペンを作成
     HPEN hPen = CreatePen(PS_SOLID, finalWidth, color);
