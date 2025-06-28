@@ -12,7 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(SDotPaint WIN32
     main.cpp 
     LayerManager.cpp
-    VectorLayer.cpp
     RasterLayer.cpp
 )
 
@@ -23,6 +22,9 @@ target_compile_definitions(SDotPaint PRIVATE
 
 target_link_libraries(SDotPaint PRIVATE
     gdi32
+    user32
+    comctl32
+    gdiplus
 )
 
 

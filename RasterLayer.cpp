@@ -1,77 +1,104 @@
 #include "RasterLayer.h"
 #include <stdexcept> //ランタイムエラーメッセージのため
 #include <algorithm>
+#include <gdiplus.h>
+
+using namespace Gdiplus;
 
 // コンストラクタ ここで画用紙(ビットマップ)を作成する
-RasterLayer::RasterLayer(int width, int height, HDC hdc, std::wstring name)
+RasterLayer::RasterLayer(int width, int height, std::wstring name)
     : width_(width), height_(height), name_(name)
 {
-    // 1. メモリデバイスコンテキスト(DC)を作成
-    hMemoryDC_ = CreateCompatibleDC(hdc);
-    if (!hMemoryDC_)
-    {
-        throw std::runtime_error("Failed to create memory DC.");
-    }
-
-    // 2. 描画ターゲットとなるビットマップを作成
-    hBitmap_ = CreateCompatibleBitmap(hdc, width_, height_);
+    // 32ビットARGB形式でビットマップを作成
+    // 作成時、全ピクセルは自動的に透明な黒でクリア
+    hBitmap_ = std::make_unique<Bitmap>(width, height, PixelFormat32bppARGB);
     if (!hBitmap_)
     {
-        DeleteDC(hMemoryDC_); // 失敗したら後片付け
-        throw std::runtime_error("Failed to create compatible bitmap.");
+        throw std::runtime_error("Failed to create GDI+ Bitmap.");
     }
-
-    // 3. 作成したビットマップをメモリDCに選択（これでメモリDCが画用紙になる）
-    SelectObject(hMemoryDC_, hBitmap_);
-
-    // 4. 初期状態として、キャンバスを白で塗りつぶす
-    clear();
 }
 
 // デストラクタ
 RasterLayer::~RasterLayer()
 {
-    if (hBitmap_)
-        DeleteObject(hBitmap_);
-    if (hMemoryDC_)
-        DeleteDC(hMemoryDC_);
+    // unique_ptrが自動的にhBitmap_を解放する
 }
 
-void RasterLayer::draw(HDC hdc) const
+void RasterLayer::draw(Graphics *g) const
 {
-    BitBlt(hdc, 0, 0, width_, height_, hMemoryDC_, 0, 0, SRCCOPY);
+    if (g && hBitmap_)
+    {
+        // 自身のビットマップを、指定されたGraphicsオブジェクト（＝画面）に描画
+        g->DrawImage(hBitmap_.get(), 0, 0);
+    }
 }
 
 void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color)
 {
-    // 新しいストロークの最初の点の場合
-    if (lastPoint_.x == -1)
+
+    // Bitmapからこのレイヤー専用のGraphicsオブジェクトを作成
+    Graphics layerGraphics(hBitmap_.get());
+    // アンチエイリアシングを有効にして線を滑らかに
+    layerGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+    if (lastPoint_.point.x != -1) // 最初の点ではない場合
     {
-        lastPoint_ = p.point;
+        // GDI+の色オブジェクトの作成
+        Color penColor;
+
+        // 線の太さを計算
+        float currentPressure = (float)p.pressure / 1023.0f;             // 現在の筆圧を0.0f-1.0fに正規化
+        float lastPressure = (float)lastPoint_.pressure / 1023.0f;       // 直前の筆圧を正規化
+        float averagePressure = (currentPressure + lastPressure) / 2.0f; // 平均の筆圧を計算
+
+        // 最大幅を乗算して、実際のペンの太さを決定
+        float penWidth = averagePressure * width;
+
+        if (penWidth < 1.0f)
+        {
+            penWidth = 1.0f; // 最小でも1pxは保証する
+        }
+
+        if (mode == DrawMode::Pen)
+        {
+            // ペンモード：不透明で描画
+            penColor.SetFromCOLORREF(color);
+        }
+        else
+        { // Eraserモード
+            // 消しゴムモード：透明色で描画することでピクセルを消す
+            penColor = Color(0, 0, 0, 0);
+        }
+
+        Pen pen(penColor, penWidth);
+        // 線の先端を丸くする
+        pen.SetStartCap(LineCapRound);
+        pen.SetEndCap(LineCapRound);
+
+        if (mode == DrawMode::Eraser)
+        {
+            // 消しゴムの場合は、合成モードを「Copy」に設定
+            // これにより、描画先のピクセル値を完全に上書きする（透明で上書き＝消す）
+            layerGraphics.SetCompositingMode(CompositingModeSourceCopy);
+        }
+        else
+        {
+            // ペンモードの場合は通常通りに合成
+            layerGraphics.SetCompositingMode(CompositingModeSourceOver);
+        }
+
+        layerGraphics.DrawLine(&pen, lastPoint_.point.x, lastPoint_.point.y, p.point.x, p.point.y);
     }
-
-    int finalWidth = (std::max)(1, static_cast<int>(width * (p.pressure / 1023.0f)));
-
-    // 筆圧に応じたペンを作成
-    HPEN hPen = CreatePen(PS_SOLID, finalWidth, color);
-    HPEN hOldPen = (HPEN)SelectObject(hMemoryDC_, hPen);
-
-    // 直前の点から現在の点まで、メモリDC上のビットマップに線を描く
-    MoveToEx(hMemoryDC_, lastPoint_.x, lastPoint_.y, nullptr);
-    LineTo(hMemoryDC_, p.point.x, p.point.y);
-
-    SelectObject(hMemoryDC_, hOldPen);
-    DeleteObject(hPen);
-
-    // 次の描画のために現在の点の位置を保存
-    lastPoint_ = p.point;
+    lastPoint_ = {p.point.x, p.point.y, p.pressure};
 }
 
 // clear: ビットマップ全体を白で塗りつぶす
 void RasterLayer::clear()
 {
-    RECT rect = {0, 0, width_, height_};
-    FillRect(hMemoryDC_, &rect, (HBRUSH)(COLOR_WINDOW + 1));
+    // レイヤーのGraphicsを取得
+    Graphics layerGraphics(hBitmap_.get());
+    // 透明色でレイヤー全体をクリア
+    layerGraphics.Clear(Color(0, 0, 0, 0));
 }
 
 // startNewStroke: ペンを一度離した時の処理

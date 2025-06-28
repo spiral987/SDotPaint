@@ -5,6 +5,11 @@
 #include "LayerManager.h"
 #include "PenData.h"
 
+// GDI+のためのインクルード
+#include <gdiplus.h>
+#pragma comment(lib, "gdiplus.lib")
+using namespace Gdiplus;
+
 // UIコントロールのIDを定義
 #define ID_ADD_LAYER_BUTTON 1001
 #define ID_DELETE_LAYER_BUTTON 1002
@@ -34,6 +39,12 @@ int WINAPI WinMain(
     LPSTR lpszCmdLine,       // コマンドライン引数
     int nShowCmd)            // ウィンドウの表示状態
 {
+
+    // GDI+の初期化
+    GdiplusStartupInput gdiplusStartupInput;
+    ULONG_PTR gdiplusToken;
+    GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+
     // ウィンドウクラスの設計と登録
     // ----------------------------------------------------------------
 
@@ -143,46 +154,8 @@ int WINAPI WinMain(
         DispatchMessage(&msg);  // メッセージを適切なウィンドウプロシージャに送る
     }
 
-    return (int)msg.wParam; // メッセージループが終了したときの戻り値
-}
-
-// 共通の描画ポイント追加処理
-void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager)
-{
-
-    // ポインターIDを取得
-    UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-
-    // ポインターの基本情報を取得
-    POINTER_INFO pointerInfo;
-    if (!GetPointerInfo(pointerId, &pointerInfo))
-    {
-        // ポインター情報の取得に失敗
-        return;
-    }
-
-    POINT screenPoint = pointerInfo.ptPixelLocation; //* ポインターの画面上の位置を取得
-    ScreenToClient(hwnd, &screenPoint);              //* 画面座標をクライアント座標に変換
-
-    UINT32 pressure = 512; // デフォルト筆圧（中間値）
-
-    if (pointerInfo.pointerType == PT_PEN)
-    {
-        // ペンの詳細情報を取得
-        POINTER_PEN_INFO penInfo;
-        if (GetPointerPenInfo(pointerId, &penInfo))
-        {
-            POINTER_PEN_INFO penInfo;
-
-            // 筆圧値を取得（0-1024の範囲）
-            if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pressure <= 1024)
-            {
-                pressure = penInfo.pressure;
-            }
-        }
-    }
-
-    layer_manager.addPoint({screenPoint, pressure}); // ペイントモデルにポイントを追加
+    GdiplusShutdown(gdiplusToken); // GDI+のシャットダウン
+    return (int)msg.wParam;        // メッセージループが終了したときの戻り値
 }
 
 // レイヤーリストボックスを更新する関数
@@ -219,12 +192,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         RECT rect;
         GetClientRect(hwnd, &rect);
 
-        // レイヤーを初期化(今回はラスターレイヤー)
-        HDC hdc = GetDC(hwnd);
-
         // 最初のレイヤーを追加し、リストを更新
-        layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc, L"レイヤー1");
-        ReleaseDC(hwnd, hdc);
+        layer_manager.createNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, L"レイヤー1");
 
         // リストボックスを初期更新
         UpdateLayerList(hwnd, layer_manager);
@@ -242,9 +211,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             RECT rect;
             GetClientRect(hwnd, &rect);
-            HDC hdc = GetDC(hwnd);
-            layer_manager.addNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top, hdc);
-            ReleaseDC(hwnd, hdc);
+            layer_manager.addNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top);
             UpdateLayerList(hwnd, layer_manager); // リストを更新
             break;
         }
@@ -367,14 +334,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     case WM_POINTERUPDATE:
     {
-        // ペンが実際に画面に接触しているときのみ
         if (IS_POINTER_INCONTACT_WPARAM(wParam))
         {
-            // ポインターが有効な範囲内かつ接触している場合のみ、描画ポイントを追加
-            AddDrawingPoint(hwnd, wParam, lParam, layer_manager);
-            InvalidateRect(hwnd, nullptr, FALSE); // ウィンドウを再描画するように要求
+            POINTER_PEN_INFO pointerPenInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+
+            if (GetPointerPenInfo(pointerId, &pointerPenInfo))
+            {
+                if (pointerPenInfo.pointerInfo.pointerType == PT_PEN)
+                {
+                    POINT p = pointerPenInfo.pointerInfo.ptPixelLocation;
+                    ScreenToClient(hwnd, &p);
+                    UINT32 pressure = pointerPenInfo.pressure;
+
+                    layer_manager.addPoint({p.x, p.y, pressure});
+                    InvalidateRect(hwnd, nullptr, FALSE);
+                }
+            }
         }
         return 0; // メッセージを処理したことを示す
+    }
+
+    case WM_POINTERUP:
+    {
+        // ペンが離れたら、現在のストロークを終了する
+        layer_manager.startNewStroke();
+        return 0;
     }
 
     // ウィンドウが破棄されるときのメッセージ
@@ -387,7 +372,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps); // 画面用描画コンテキストを取得
 
-        layer_manager.draw(hdc);
+        // ★ GDI+で描画する
+        {
+            Graphics graphics(hdc);
+            // LayerManagerの描画処理を呼ぶ
+            layer_manager.draw(&graphics);
+        }
 
         EndPaint(hwnd, &ps);
     }
