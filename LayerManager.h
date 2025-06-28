@@ -17,6 +17,7 @@ private:
     DrawMode currentMode_ = DrawMode::Pen;        // モードを保持
     int penWidth_ = 5;                            // ペンの太さ
     int eraserWidth_ = 20;                        // 消しゴムの太さ
+    COLORREF penColor_ = RGB(0, 0, 0);            // ペンの色
 
 public:
     LayerManager(); // コンストラクタ
@@ -34,11 +35,13 @@ public:
     void setDrawMode(DrawMode newMode);
     void setPenWidth(int width);
     void setEraserWidth(int width);
+    void setPenColor(COLORREF color);
 
     // getter
     //  現在アクティブなレイヤーを取得
     ILayer *getActiveLayer() const;
     DrawMode getCurrentMode() const;
+    COLORREF getPenColor() const;
     // 現在のペンの太さを返す
     int getCurrentToolWidth() const;
 };

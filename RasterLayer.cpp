@@ -42,23 +42,12 @@ void RasterLayer::draw(HDC hdc) const
     BitBlt(hdc, 0, 0, width_, height_, hMemoryDC_, 0, 0, SRCCOPY);
 }
 
-void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width)
+void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color)
 {
     // 新しいストロークの最初の点の場合
     if (lastPoint_.x == -1)
     {
         lastPoint_ = p.point;
-    }
-
-    // モードに応じて色を変更する
-    COLORREF color;
-    if (mode == DrawMode::Eraser)
-    {
-        color = RGB(255, 255, 255);
-    }
-    else
-    {
-        color = RGB(0, 0, 0);
     }
 
     int finalWidth = (std::max)(1, static_cast<int>(width * (p.pressure / 1023.0f)));

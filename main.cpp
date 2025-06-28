@@ -176,7 +176,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         switch (wParam)
         {
-        case 'E':
+        case 'E': // 消しゴム
         {
             layer_manager.setDrawMode(DrawMode::Eraser);
             { // 変数スコープを明確にするための括弧
@@ -187,7 +187,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case 'Q':
+        case 'Q': // ペン
         {
             layer_manager.setDrawMode(DrawMode::Pen);
             {
@@ -195,6 +195,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 SendMessage(hSlider, TBM_SETPOS, TRUE, width);
                 SetWindowTextW(hStaticValue, std::to_wstring(width).c_str());
             }
+            break;
+        }
+        case 'C': // 色選択(Color)
+        {
+            // 1. ダイアログ設定用の構造体を準備
+            CHOOSECOLOR cc;
+            static COLORREF customColors[16]; // カスタムカラーを保存する配列
+
+            ZeroMemory(&cc, sizeof(cc)); // 構造体をゼロで初期化
+            cc.lStructSize = sizeof(cc);
+            cc.hwndOwner = hwnd;                        // 親ウィンドウのハンドル
+            cc.lpCustColors = (LPDWORD)customColors;    // カスタムカラー配列へのポインタ
+            cc.rgbResult = layer_manager.getPenColor(); // 初期色を現在のペンの色に設定
+            cc.Flags = CC_FULLOPEN | CC_RGBINIT;        // ダイアログのスタイル
+
+            // 2. 「色の設定」ダイアログを表示
+            if (ChooseColor(&cc) == TRUE)
+            {
+                // 3. ユーザーがOKを押したら、選択された色で更新
+                layer_manager.setPenColor(cc.rgbResult);
+            }
+            // フォーカスを戻しておく
+            SetFocus(hwnd);
             break;
         }
         }

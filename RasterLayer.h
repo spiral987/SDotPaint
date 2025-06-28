@@ -21,7 +21,7 @@ public:
     ~RasterLayer();
 
     void draw(HDC hdc) const override;
-    void addPoint(const PenPoint &p, DrawMode mode, int width) override;
+    void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) override;
     void clear() override;
     void startNewStroke() override;
 
