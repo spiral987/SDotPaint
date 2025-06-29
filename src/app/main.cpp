@@ -3,8 +3,8 @@
 #include <debugapi.h> // OutputDebugStringW を使う
 #include <CommCtrl.h>
 #include <string>
-#include "LayerManager.h"
-#include "PenData.h"
+#include "core/LayerManager.h"
+#include "core/PenData.h"
 
 // 数学関数(atan2f)のために必要
 #include <cmath>
@@ -48,11 +48,11 @@ static bool g_isRotateMode = false;  // 回転モードかどうかのフラグ
 static float g_rotationAngle = 0.0f; // 現在の総回転角度
 static float g_startAngle = 0.0f;    // 回転開始時の角度
 
-static bool g_isZoomMode = false;               // ★ズームモードかどうかのフラグ
-static float g_zoomFactor = 1.0f;               // ★現在のズーム率
-static float g_baseZoomFactor = 1.0f;           // ★ズーム開始時のズーム率
-static POINT g_zoomStartPoint = {0, 0};         // ★ズーム開始時のスクリーン座標
-static PointF g_zoomCenterWorld = {0.0f, 0.0f}; // ★ズーム基点のワールド座標
+static bool g_isZoomMode = false;               // ズームモードかどうかのフラグ
+static float g_zoomFactor = 1.0f;               // 現在のズーム率
+static float g_baseZoomFactor = 1.0f;           // ズーム開始時のズーム率
+static POINT g_zoomStartPoint = {0, 0};         // ズーム開始時のスクリーン座標
+static PointF g_zoomCenterWorld = {0.0f, 0.0f}; // ズーム基点のワールド座標
 
 static bool g_isPenContact = false; // ペンの接触状態を自前で管理するフラグ
 
@@ -865,7 +865,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // アンチエイリアスを有効にする
             backBufferGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-            // === ★★★ 新しいビュー変換 ★★★ ===
+            // ビュー変換
             Matrix transformMatrix;
             float centerX = g_nClientWidth / 2.0f;
             float centerY = g_nClientHeight / 2.0f;
@@ -880,8 +880,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
 
             backBufferGraphics.SetTransform(&transformMatrix);
-
-            // ===================================
 
             // LayerManagerに描画を依頼（ホバー状態に応じた描画が行われる）
             layer_manager.draw(&backBufferGraphics);

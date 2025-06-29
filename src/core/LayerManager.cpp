@@ -1,5 +1,5 @@
 ﻿#include "LayerManager.h"
-#include "RasterLayer.h"
+#include "layers/RasterLayer.h"
 
 // コンストラクタ デフォルトでベクタレイヤーを一つ作成
 LayerManager::LayerManager()

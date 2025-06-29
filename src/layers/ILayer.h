@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "PenData.h"
-#include "DrawMode.h"
+#include "core/PenData.h"
+#include "core/DrawMode.h"
 
 #include <windows.h>
 #include <vector>
