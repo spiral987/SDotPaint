@@ -1,5 +1,8 @@
 ﻿#include "LayerManager.h"
 #include "RasterLayer.h"
+#include <gdiplus.h>
+
+using namespace Gdiplus;
 
 // コンストラクタ デフォルトでベクタレイヤーを一つ作成
 LayerManager::LayerManager()
@@ -55,8 +58,17 @@ void LayerManager::renameLayer(int index, const std::wstring &newName)
 }
 
 // レイヤーに処理を依頼する関数たち
-void LayerManager::draw(Gdiplus::Graphics *g) const
+void LayerManager::draw(Graphics *g, Image *pTexture) const
 {
+    if (!g)
+    {
+        return;
+    }
+
+    // 描画品質を設定
+    g->SetSmoothingMode(SmoothingModeAntiAlias);
+    g->SetInterpolationMode(InterpolationModeHighQualityBicubic);
+
     // すべてのレイヤーを描画する
     // ホバー状態に応じて不透明度を変えて描画
     for (int i = 0; i < layers_.size(); ++i)
@@ -71,7 +83,7 @@ void LayerManager::draw(Gdiplus::Graphics *g) const
                 opacity = 0.05f; // 5%の不透明度
             }
 
-            layers_[i]->draw(g, opacity);
+            layers_[i]->draw(g, opacity, pTexture);
         }
     }
 }

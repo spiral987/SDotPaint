@@ -12,6 +12,7 @@
 namespace Gdiplus
 {
     class Graphics;
+    class Image;
 }
 
 // アプリケーションのデータ(レイヤー管理)
@@ -37,7 +38,7 @@ public:
     void renameLayer(int index, const std::wstring &newname);
 
     // アクティブなレイヤーに処理を渡す関数たち
-    void draw(Gdiplus::Graphics *g) const;
+    void draw(Gdiplus::Graphics *g, Gdiplus::Image *pTexture = nullptr) const;
     void addPoint(const PenPoint &p);
     void clear();
     void startNewStroke();

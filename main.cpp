@@ -14,6 +14,9 @@
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
 
+// テクスチャ画像を保持するグローバル変数
+static Image *g_pTextureImage = nullptr;
+
 // UIコントロールのIDを定義
 #define ID_ADD_LAYER_BUTTON 1001
 #define ID_DELETE_LAYER_BUTTON 1002
@@ -196,6 +199,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
+
+        // テクスチャ画像を読み込む
+        g_pTextureImage = new Image(L"texture.png");
+        if (g_pTextureImage->GetLastStatus() != Ok)
+        {
+            MessageBoxW(hwnd, L"texture.png が見つかりませんでした。\nテクスチャなしで続行します。", L"情報", MB_OK);
+            delete g_pTextureImage;
+            g_pTextureImage = nullptr;
+        }
 
         // インスタンスハンドルを取得
         HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
@@ -844,6 +856,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // ウィンドウが破棄されるときのメッセージ
     case WM_DESTROY:
     {
+
+        // 読み込んだテクスチャ画像を解放
+        delete g_pTextureImage;
+
         // バックバッファを解放
         delete g_pBackBuffer;
         GdiplusShutdown(gdiplusToken);
@@ -865,7 +881,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // アンチエイリアスを有効にする
             backBufferGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-            // === ★★★ 新しいビュー変換 ★★★ ===
+            // ビュー変換
             Matrix transformMatrix;
             float centerX = g_nClientWidth / 2.0f;
             float centerY = g_nClientHeight / 2.0f;
@@ -881,10 +897,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             backBufferGraphics.SetTransform(&transformMatrix);
 
-            // ===================================
-
             // LayerManagerに描画を依頼（ホバー状態に応じた描画が行われる）
-            layer_manager.draw(&backBufferGraphics);
+            layer_manager.draw(&backBufferGraphics, g_pTextureImage);
 
             // 画面にバックバッファの内容を一度に転送
             Graphics screenGraphics(hdc);

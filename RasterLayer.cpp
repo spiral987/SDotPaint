@@ -26,18 +26,58 @@ RasterLayer::~RasterLayer()
     // unique_ptrが自動的にhBitmap_を解放する
 }
 
-void RasterLayer::draw(Graphics *g, float opacity) const
+void RasterLayer::draw(Graphics *g, float opacity, Image *pTexture) const
 {
-    if (g && hBitmap_)
+    // Graphicsオブジェクトが有効でなければ何もしない
+    if (!g)
+        return;
+
+    // --- テクスチャを使った描画処理 ---
+    // テクスチャが指定されていて、かつストロークが存在する場合
+    if (pTexture && !m_strokes.empty())
+    {
+        // 1. テクスチャ画像から、塗りつぶし用のブラシを作成する
+        TextureBrush textureBrush(pTexture);
+
+        // 2. 保存されている全てのストロークを順番に描画していく
+        for (const auto &stroke : m_strokes)
+        {
+            // 点が2つ未満のストロークは描画できないのでスキップ
+            if (stroke.points.size() < 2)
+                continue;
+
+            // 3. ストロークの軌跡から、塗りつぶすべき領域の形（パス）を作成する
+            GraphicsPath path;
+            for (const auto &point : stroke.points)
+            {
+                // ペンの太さと筆圧を反映させて、点の大きさを計算
+                float width = stroke.penWidth * (point.pressure / 1024.0f);
+                if (width < 1.0f)
+                    width = 1.0f;
+
+                // ストロークの各点に円を追加していく。円が連なることで、滑らかな線の形になる
+                path.AddEllipse(
+                    (float)point.x - width / 2.0f,
+                    (float)point.y - width / 2.0f,
+                    width,
+                    width);
+            }
+
+            // 4. 出来上がった線の形（パス）を、テクスチャブラシで塗りつぶす
+            g->FillPath(&textureBrush, &path);
+        }
+    }
+    // --- 従来のビットマップベースの描画処理（フォールバック） ---
+    // テクスチャが指定されていない場合は、これまで通りレイヤーのビットマップを描画
+    else if (hBitmap_)
     {
         if (opacity >= 1.0f)
         {
-            // 不透明度が100%ならそのまま描画
             g->DrawImage(hBitmap_.get(), 0, 0);
         }
         else
         {
-            // 半透明描画
+            // (半透明描画のロジックは変更なし)
             ImageAttributes imageAttr;
             ColorMatrix colorMatrix = {
                 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -45,9 +85,7 @@ void RasterLayer::draw(Graphics *g, float opacity) const
                 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, opacity, 0.0f,
                 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-
             imageAttr.SetColorMatrix(&colorMatrix, ColorMatrixFlagsDefault, ColorAdjustTypeBitmap);
-
             g->DrawImage(hBitmap_.get(), Rect(0, 0, width_, height_), 0, 0, width_, height_, UnitPixel, &imageAttr);
         }
     }
