@@ -1,12 +1,15 @@
 ﻿// Windows APIを使用するために必要なヘッダファイル
 #include <windows.h>
-#include <debugapi.h> // OutputDebugStringW を使うため
+#include <debugapi.h> // OutputDebugStringW を使う
 #include <CommCtrl.h>
 #include <string>
 #include "LayerManager.h"
 #include "PenData.h"
 
-// GDI+のためのインクルード
+// 数学関数(atan2f)のために必要
+#include <cmath>
+
+// GDI+のため
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
@@ -35,13 +38,31 @@ Bitmap *g_pBackBuffer = nullptr;
 int g_nClientWidth = 0;
 int g_nClientHeight = 0;
 
+// 視点移動用のグローバル変数
+static bool g_isPanMode = false;      // 視点移動モードかどうかのフラグ
+static POINT g_panLastPoint = {0, 0}; // 視点移動時の最後のマウス位置
+static PointF g_viewCenter = {0, 0};  // ワールド座標系でのビュー中心
+// static POINT g_viewOffset = {0, 0};   // 視点のオフセット量
+
+static bool g_isRotateMode = false;  // 回転モードかどうかのフラグ
+static float g_rotationAngle = 0.0f; // 現在の総回転角度
+static float g_startAngle = 0.0f;    // 回転開始時の角度
+
+static bool g_isZoomMode = false;               // ★ズームモードかどうかのフラグ
+static float g_zoomFactor = 1.0f;               // ★現在のズーム率
+static float g_baseZoomFactor = 1.0f;           // ★ズーム開始時のズーム率
+static POINT g_zoomStartPoint = {0, 0};         // ★ズーム開始時のスクリーン座標
+static PointF g_zoomCenterWorld = {0.0f, 0.0f}; // ★ズーム基点のワールド座標
+
+static bool g_isPenContact = false; // ペンの接触状態を自前で管理するフラグ
+
 // マウスリーブイベントをトラックするためのフラグ
 static bool g_bTrackingMouse = false;
 
 // 描画ポイント追加関数のプロトタイプ宣言
 void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager);
 
-// レイヤーリストを更新するヘルパー関数のプロトタイプ宣言
+// レイヤーリストを更新するヘルパー関数
 void UpdateLayerList(HWND hwnd, LayerManager &layerManager);
 
 // エディットコントロールのサブクラスプロシージャ
@@ -56,6 +77,9 @@ LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 // 背景色に応じてテキスト色を決定する関数
 COLORREF GetContrastingTextColor(COLORREF bgColor);
+
+// モード管理を統合する関数
+void UpdateToolMode(HWND hwnd);
 
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
@@ -235,6 +259,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         g_nClientWidth = rect.right - rect.left;
         g_nClientHeight = rect.bottom - rect.top;
 
+        // ビューの中心をウィンドウの中心に初期化
+        g_viewCenter.X = g_nClientWidth / 2.0f;
+        g_viewCenter.Y = g_nClientHeight / 2.0f;
+
         // 最初のレイヤーを追加し、リストを更新
         layer_manager.createNewRasterLayer(g_nClientWidth, g_nClientHeight, L"レイヤー1");
 
@@ -291,15 +319,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // Altキーを離したときの処理
     case WM_KEYUP:
     {
-        if (wParam == VK_MENU)
-        {
-            // Altが離されたら、必ずホバー状態を解除
-            if (layer_manager.getHoveredLayerIndex() != -1)
-            {
-                layer_manager.setHoveredLayer(-1);
-                InvalidateRect(hwnd, NULL, FALSE); // 再描画を要求
-            }
-        }
+        // キーが離されたら、現在のキー状態に基づいてモードを更新する
+        UpdateToolMode(hwnd);
         return 0;
     }
 
@@ -321,62 +342,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        // Altキーが押されているか？
-        if (GetKeyState(VK_MENU) < 0)
-        {
-
-            // カーソルはリストボックスの上にあるか？
-            if (hChildUnderCursor == hLayerList)
-            {
-
-                // リストボックスのクライアント座標に変換
-                ScreenToClient(hLayerList, &pt);
-
-                // カーソル位置のアイテムインデックスを取得
-                DWORD itemIndexResult = SendMessage(hLayerList, LB_ITEMFROMPOINT, 0, MAKELPARAM(pt.x, pt.y));
-                int newHoveredIndex = -1;
-
-                // HIWORDが0なら、アイテムの「上」にカーソルがある
-                if (HIWORD(itemIndexResult) == 0)
-                {
-                    newHoveredIndex = LOWORD(itemIndexResult);
-                }
-                // elseの場合はアイテムの外側（余白など）なので -1 のまま
-
-                // ホバー状態が変化した場合のみ、更新と再描画を行う
-                if (newHoveredIndex != layer_manager.getHoveredLayerIndex())
-                {
-                    wchar_t debugStr[256];
-
-                    OutputDebugStringW(debugStr);
-
-                    layer_manager.setHoveredLayer(newHoveredIndex);
-                    InvalidateRect(hwnd, NULL, FALSE); // 再描画
-                }
-            }
-            else // Altキーは押されているが、カーソルはリストボックスの外
-            {
-                if (layer_manager.getHoveredLayerIndex() != -1)
-                {
-                    OutputDebugStringW(L"[DEBUG] Mouse left listbox with Alt key.\n");
-                    layer_manager.setHoveredLayer(-1);
-                    InvalidateRect(hwnd, NULL, FALSE);
-                }
-            }
-        }
-        else // Altキーが押されていない
-        {
-            // ホバー状態であれば解除する
-            if (layer_manager.getHoveredLayerIndex() != -1)
-            {
-                OutputDebugStringW(L"[DEBUG] Alt key released, resetting hover.\n");
-                layer_manager.setHoveredLayer(-1);
-                InvalidateRect(hwnd, NULL, FALSE);
-            }
-        }
         return 0; // WM_MOUSEMOVEはここで処理を終える
     }
 
+    // ボタンやリスト
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -404,7 +373,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case ID_LAYER_LISTBOX:
         {
 
-            // ダブルクリックされた場合
+            // 名称変更のため ダブルクリックされた場合
             if (wmEvent == LBN_DBLCLK)
             {
                 // 選択されている項目のインデックスを取得
@@ -460,10 +429,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_KEYDOWN:
     {
+        // キーが押されたら、まずモードを更新する
+        if (wParam == VK_CONTROL || wParam == VK_SPACE || wParam == 'R')
+        {
+            UpdateToolMode(hwnd);
+            return 0; // モード変更キーの場合は、他の処理をしない
+        }
+
         switch (wParam)
         {
         case 'E': // 消しゴム
         {
+            SetFocus(hwnd);
             layer_manager.setDrawMode(DrawMode::Eraser);
             { // 変数スコープを明確にするための括弧
                 int width = layer_manager.getCurrentToolWidth();
@@ -475,6 +452,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case 'Q': // ペン
         {
+            SetFocus(hwnd);
             layer_manager.setDrawMode(DrawMode::Pen);
             {
                 int width = layer_manager.getCurrentToolWidth();
@@ -485,6 +463,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case 'C': // 色選択(Color)
         {
+            SetFocus(hwnd);
             // 1. ダイアログ設定用の構造体を準備
             CHOOSECOLOR cc;
             static COLORREF customColors[16]; // カスタムカラーを保存する配列
@@ -540,23 +519,84 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // ペンでタッチダウンしたときのメッセージ
     case WM_POINTERDOWN:
     {
+        g_isPenContact = true;
         SetFocus(hwnd);
-        // 右ボタンがクリックされた場合はクリア処理
-        if (IS_POINTER_SECONDBUTTON_WPARAM(wParam))
+
+        // 視点移動モード中の処理
+        if (g_isPanMode)
         {
-            layer_manager.clear();
-            InvalidateRect(hwnd, nullptr, TRUE); // 背景を白でクリア
+            // ペンの現在位置を取得して、移動開始点として保存
+            POINTER_INFO pointerInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+            if (GetPointerInfo(pointerId, &pointerInfo))
+            {
+                g_panLastPoint = pointerInfo.ptPixelLocation;
+                ScreenToClient(hwnd, &g_panLastPoint);
+                SetCapture(hwnd); // ウィンドウ外にマウスが出てもメッセージを補足する
+            }
+            return 0; // 描画処理は行わない
+        }
+
+        // 回転モード中の処理
+        else if (g_isRotateMode)
+        {
+            POINTER_INFO pointerInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+            if (GetPointerInfo(pointerId, &pointerInfo))
+            {
+                POINT currentPoint = pointerInfo.ptPixelLocation;
+                ScreenToClient(hwnd, &currentPoint);
+
+                // ウィンドウ中心と現在地の角度を計算して保存
+                float dx = (float)currentPoint.x - (g_nClientWidth / 2.0f);
+                float dy = (float)currentPoint.y - (g_nClientHeight / 2.0f);
+                g_startAngle = atan2f(dy, dx);
+            }
             return 0;
         }
 
-        layer_manager.startNewStroke();
-        // fallthrough - 左ボタンの場合は描画処理へ
-    }
-    case WM_POINTERUPDATE:
-    {
-        // ペンが画面に触れている時（描画処理）のみを処理する
-        if (IS_POINTER_INCONTACT_WPARAM(wParam))
+        // ズームモード中の処理
+        else if (g_isZoomMode)
         {
+            POINTER_INFO pointerInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+            if (GetPointerInfo(pointerId, &pointerInfo))
+            {
+                POINT p = pointerInfo.ptPixelLocation;
+                ScreenToClient(hwnd, &p);
+
+                // ズーム操作の開始情報を記録
+                g_zoomStartPoint = p;
+                g_baseZoomFactor = g_zoomFactor;
+
+                // ズームの基点となるワールド座標を計算して保存
+                Matrix transformMatrix;
+                float centerX = g_nClientWidth / 2.0f;
+                float centerY = g_nClientHeight / 2.0f;
+                transformMatrix.Translate(centerX, centerY);
+                transformMatrix.Rotate(g_rotationAngle);
+                transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
+                transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+                transformMatrix.Invert();
+                PointF pointF = {(float)p.x, (float)p.y};
+                transformMatrix.TransformPoints(&pointF, 1);
+                g_zoomCenterWorld = pointF;
+            }
+            return 0;
+        }
+        else
+        {
+            // 右ボタンがクリックされた場合はクリア処理
+            if (IS_POINTER_SECONDBUTTON_WPARAM(wParam))
+            {
+                layer_manager.clear();
+                InvalidateRect(hwnd, nullptr, TRUE); // 背景を白でクリア
+                return 0;
+            }
+
+            layer_manager.startNewStroke();
+
+            // ペンが押された「最初の1点」を描画する
             POINTER_PEN_INFO penInfo;
             UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
             if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
@@ -565,13 +605,191 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ScreenToClient(hwnd, &p);
                 UINT32 pressure = penInfo.pressure;
 
-                layer_manager.addPoint({p.x, p.y, pressure});
+                // === ★★★ 正しい逆変換処理 ★★★ ===
 
-                // 親ウィンドウ（キャンバス）を再描画
+                // GDI+のMatrixオブジェクトを使って逆変換を計算
+                Matrix transformMatrix;
+                float centerX = g_nClientWidth / 2.0f;
+                float centerY = g_nClientHeight / 2.0f;
+
+                // WM_PAINTの描画時と全く同じ順番で、順方向の変換行列を作成する
+                transformMatrix.Translate(centerX, centerY);
+                transformMatrix.Rotate(g_rotationAngle);
+                transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
+                transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+
+                // 作成した順方向の行列から、逆行列を計算
+                transformMatrix.Invert();
+
+                // スクリーン上のペン座標をPointFに変換
+                PointF pointF = {(float)p.x, (float)p.y};
+
+                // 逆行列を使って、スクリーン座標をワールド座標に変換
+                transformMatrix.TransformPoints(&pointF, 1);
+
+                // ワールド座標に変換された点をレイヤーに記録
+                layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
+
+                // =====================================
+
+                // 親ウィンドウ（キャンバス）とレイヤーリストを再描画
                 InvalidateRect(hwnd, NULL, FALSE);
-
-                // レイヤーリストボックスも再描画するよう依頼する
                 InvalidateRect(hLayerList, NULL, FALSE);
+            }
+        }
+        return 0;
+    }
+
+    case WM_POINTERUPDATE:
+    {
+        // 視点移動処理
+        if (g_isPenContact)
+        {
+            // 視点移動モード中の処理
+            if (g_isPanMode)
+            {
+                OutputDebugStringW(L"    -> Pan processing branch ENTERED.\n");
+
+                POINTER_INFO pointerInfo;
+                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+                if (GetPointerInfo(pointerId, &pointerInfo))
+                {
+                    POINT currentPoint = pointerInfo.ptPixelLocation;
+                    ScreenToClient(hwnd, &currentPoint);
+
+                    // スクリーン座標での移動量
+                    float dx = (float)currentPoint.x - (float)g_panLastPoint.x;
+                    float dy = (float)currentPoint.y - (float)g_panLastPoint.y;
+
+                    // 移動量を現在の回転角度の逆方向に回転させてから、ビュー中心に適用
+                    float angleRad = -g_rotationAngle * (3.14159265f / 180.0f);
+                    float rotatedDx = dx * cosf(angleRad) - dy * sinf(angleRad);
+                    float rotatedDy = dx * sinf(angleRad) + dy * cosf(angleRad);
+
+                    if (g_zoomFactor > 0.0f)
+                    {
+                        rotatedDx /= g_zoomFactor;
+                        rotatedDy /= g_zoomFactor;
+                    }
+
+                    // 移動量を計算してオフセットに加算
+                    g_viewCenter.X -= rotatedDx;
+                    g_viewCenter.Y -= rotatedDy;
+
+                    // 現在位置を次の計算のために保存
+                    g_panLastPoint = currentPoint;
+
+                    // 画面を再描画
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0; // 描画処理は行わない
+            }
+
+            // 回転モード中の処理
+            else if (g_isRotateMode)
+            {
+                POINTER_INFO pointerInfo;
+                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+                if (GetPointerInfo(pointerId, &pointerInfo))
+                {
+                    POINT currentPoint = pointerInfo.ptPixelLocation;
+                    ScreenToClient(hwnd, &currentPoint);
+
+                    // ウィンドウ中心と現在地の角度を計算
+                    float dx = (float)currentPoint.x - (g_nClientWidth / 2.0f);
+                    float dy = (float)currentPoint.y - (g_nClientHeight / 2.0f);
+                    float currentAngle = atan2f(dy, dx);
+
+                    // 開始角度からの差分を計算し、総回転角度に加える
+                    float deltaAngle = currentAngle - g_startAngle;
+                    g_rotationAngle += deltaAngle * (180.0f / 3.14159265f); // ラジアンから度に変換
+
+                    // 次のUPDATEのために、開始角度を現在の角度に更新
+                    g_startAngle = currentAngle;
+
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
+
+            // ★ズームモード中の処理
+            else if (g_isZoomMode)
+            {
+                POINTER_INFO pointerInfo;
+                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+                if (GetPointerInfo(pointerId, &pointerInfo))
+                {
+                    POINT currentPoint = pointerInfo.ptPixelLocation;
+                    ScreenToClient(hwnd, &currentPoint);
+
+                    float totalDeltaX = (float)currentPoint.x - (float)g_zoomStartPoint.x;
+                    float oldZoom = g_zoomFactor;
+
+                    // 指数関数的にズーム率を変化させると、より自然な操作感になる
+                    g_zoomFactor = g_baseZoomFactor * expf(totalDeltaX * 0.005f);
+
+                    // ズーム率に下限と上限を設ける
+                    if (g_zoomFactor < 0.1f)
+                        g_zoomFactor = 0.1f;
+                    if (g_zoomFactor > 10.0f)
+                        g_zoomFactor = 10.0f;
+
+                    // ズーム基点がズレないようにビューの中心を補正
+                    if (g_zoomFactor > 0.0f)
+                    {
+                        g_viewCenter.X = g_zoomCenterWorld.X + (g_viewCenter.X - g_zoomCenterWorld.X) * (oldZoom / g_zoomFactor);
+                        g_viewCenter.Y = g_zoomCenterWorld.Y + (g_viewCenter.Y - g_zoomCenterWorld.Y) * (oldZoom / g_zoomFactor);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            }
+            else
+            {
+                // 描画処理
+
+                POINTER_PEN_INFO penInfo;
+                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+                // ペンが画面に触れている時（描画処理）のみを処理する
+                if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
+                {
+                    POINT p = penInfo.pointerInfo.ptPixelLocation;
+                    ScreenToClient(hwnd, &p);
+                    UINT32 pressure = penInfo.pressure;
+
+                    // === ★★★ 正しい逆変換処理 ★★★ ===
+
+                    // GDI+のMatrixオブジェクトを使って逆変換を計算
+                    Matrix transformMatrix;
+                    float centerX = g_nClientWidth / 2.0f;
+                    float centerY = g_nClientHeight / 2.0f;
+
+                    // WM_PAINTの描画時と全く同じ順番で、順方向の変換行列を作成する
+                    transformMatrix.Translate(centerX, centerY);
+                    transformMatrix.Rotate(g_rotationAngle);
+                    transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
+                    transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+
+                    // 作成した順方向の行列から、逆行列を計算
+                    transformMatrix.Invert();
+
+                    // スクリーン上のペン座標をPointFに変換
+                    PointF pointF = {(float)p.x, (float)p.y};
+
+                    // 逆行列を使って、スクリーン座標をワールド座標に変換
+                    transformMatrix.TransformPoints(&pointF, 1);
+
+                    // ワールド座標に変換された点をレイヤーに記録
+                    layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
+
+                    // =====================================
+
+                    // 親ウィンドウ（キャンバス）を再描画
+                    InvalidateRect(hwnd, NULL, FALSE);
+
+                    // レイヤーリストボックスも再描画するよう依頼する
+                    InvalidateRect(hLayerList, NULL, FALSE);
+                }
             }
         }
         // ホバー時の処理は LayerListProc に移譲したので、ここでは何もしない
@@ -580,8 +798,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_POINTERUP:
     {
-        // ペンが離れたら、現在のストロークを終了する
-        layer_manager.startNewStroke();
+        g_isPenContact = false;
+
+        // OutputDebugStringW(L"--- WM_POINTERUP ---\n");
+
+        if (g_isRotateMode)
+        {
+            // 何もしない
+        }
+        //  視点移動モード中の処理
+        else if (g_isPanMode)
+        {
+            ReleaseCapture(); // マウスキャプチャを解放
+        }
+        else if (g_isZoomMode)
+        {
+            // 何もしない
+        }
+        else
+        {
+            // ペンが離れたら、現在のストロークを終了する
+            layer_manager.startNewStroke();
+        }
+
         return 0;
     }
 
@@ -621,9 +860,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             // バックバッファからグラフィックスオブジェクトを作成
             Graphics backBufferGraphics(g_pBackBuffer);
-
             // 背景を白でクリア
             backBufferGraphics.Clear(Color(255, 255, 255, 255));
+            // アンチエイリアスを有効にする
+            backBufferGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+            // === ★★★ 新しいビュー変換 ★★★ ===
+            Matrix transformMatrix;
+            float centerX = g_nClientWidth / 2.0f;
+            float centerY = g_nClientHeight / 2.0f;
+
+            // 1. ビューの中心がウィンドウの中心に来るように移動
+            transformMatrix.Translate(centerX, centerY);
+            // 2. 回転
+            transformMatrix.Rotate(g_rotationAngle);
+            // 3. 縮尺変換
+            transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
+            // 4. ワールド座標のビュー中心を原点に持ってくる
+            transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+
+            backBufferGraphics.SetTransform(&transformMatrix);
+
+            // ===================================
 
             // LayerManagerに描画を依頼（ホバー状態に応じた描画が行われる）
             layer_manager.draw(&backBufferGraphics);
@@ -643,6 +901,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+
 // レイヤーリストボックスのサブクラスプロシージャ
 LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
@@ -651,7 +910,7 @@ LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
 
-        // ★★★ ペンホバーの処理をここに追加 ★★★
+        // ペンホバーの処理
     case WM_POINTERUPDATE:
     {
         // ペンが触れていない（ホバー）状態か？
@@ -689,7 +948,7 @@ LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         return 0; // メッセージを処理した
     }
 
-    // ★★★ ペンが領域から離れたときの処理を追加 ★★★
+    // ペンが領域から離れたときの処理
     case WM_POINTERLEAVE:
     {
         if (layer_manager->getHoveredLayerIndex() != -1)
@@ -767,4 +1026,58 @@ LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 
     // デフォルトのプロシージャを呼び出す
     return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
+
+// モード管理を統合するヘルパー関数
+void UpdateToolMode(HWND hwnd)
+{
+    // 現在の各キーの押下状態を取得
+    bool isCtrlDown = GetKeyState(VK_CONTROL) < 0;
+    bool isSpaceDown = GetKeyState(VK_SPACE) < 0;
+    bool isRDown = GetKeyState('R') < 0;
+
+    // 1. ズームモード (Ctrl + Space) を最優先で判定
+    if (isCtrlDown && isSpaceDown)
+    {
+        if (!g_isZoomMode)
+        {
+            g_isZoomMode = true;
+            g_isPanMode = false;
+            g_isRotateMode = false;
+            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+        }
+    }
+    // 2. パンモード (Space単体) を次に判定
+    else if (isSpaceDown)
+    {
+        if (!g_isPanMode)
+        {
+            g_isPanMode = true;
+            g_isZoomMode = false;
+            g_isRotateMode = false;
+            SetCursor(LoadCursor(nullptr, IDC_HAND));
+        }
+    }
+    // 3. 回転モード (R単体) を次に判定
+    else if (isRDown)
+    {
+        if (!g_isRotateMode)
+        {
+            g_isRotateMode = true;
+            g_isPanMode = false;
+            g_isZoomMode = false;
+            SetCursor(LoadCursor(nullptr, IDC_CROSS));
+        }
+    }
+    // 4. 上記のいずれでもなければ、全ての視点操作モードを解除
+    else
+    {
+        if (g_isZoomMode || g_isPanMode || g_isRotateMode)
+        {
+            g_isZoomMode = false;
+            g_isPanMode = false;
+            g_isRotateMode = false;
+            SetCursor(LoadCursor(nullptr, IDC_ARROW));
+        }
+    }
 }
