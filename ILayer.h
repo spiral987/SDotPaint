@@ -7,13 +7,12 @@
 #include <vector>
 #include <string>
 
-s
-    // GDI+ の前方宣言
-    namespace Gdiplus
+// GDI+ の前方宣言
+namespace Gdiplus
 {
     class Graphics;
     class Image;
-}
+};
 
 // すべてのレイヤーの基底となるインターフェースクラス
 // LayerManagerでそれぞれのレイヤーを呼び出す際に、Layerクラスで実装しておくべき関数を定義する

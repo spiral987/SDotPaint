@@ -111,7 +111,14 @@ void LayerManager::clear()
 
 void LayerManager::startNewStroke()
 {
-    if (auto *layer = getActiveLayer())
+    if (auto *layer = dynamic_cast<RasterLayer *>(getActiveLayer()))
+    {
+        // 現在のツール設定を渡して、新しいストロークを開始する
+        COLORREF drawColor = (currentMode_ == DrawMode::Pen) ? getPenColor() : RGB(255, 255, 255);
+        layer->startNewStroke(currentMode_, getCurrentToolWidth(), drawColor);
+    }
+    // ベクターレイヤーなど、他のレイヤータイプの場合はこちら
+    else if (auto *layer = getActiveLayer())
     {
         layer->startNewStroke();
     }

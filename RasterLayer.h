@@ -34,7 +34,7 @@ private:
     std::wstring name_;
     Stroke currentStroke_; // 現在描画中のストローク
 
-    PenPoint lastPoint_ = {{-1, -1}, 0};
+    // PenPoint lastPoint_ = {{-1, -1}, 0};
 
 public:
     // コンストラクタ、デストラクタ
@@ -44,6 +44,7 @@ public:
     void draw(Gdiplus::Graphics *g, float opacity = 1.0f, Gdiplus::Image *pTexture = nullptr) const override;
     void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) override;
     void clear() override;
+    void startNewStroke(DrawMode mode, int width, COLORREF color);
     void startNewStroke() override;
 
     const std::wstring &getName() const override;
