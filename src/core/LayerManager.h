@@ -38,7 +38,7 @@ public:
 
     // アクティブなレイヤーに処理を渡す関数たち
     void draw(Gdiplus::Graphics *g) const;
-    void addPoint(const PenPoint &p);
+    RECT addPoint(const PenPoint &p);
     void clear();
     void startNewStroke();
 

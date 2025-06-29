@@ -76,7 +76,7 @@ void LayerManager::draw(Gdiplus::Graphics *g) const
     }
 }
 
-void LayerManager::addPoint(const PenPoint &p)
+RECT LayerManager::addPoint(const PenPoint &p)
 {
     if (auto *layer = getActiveLayer())
     {
@@ -85,8 +85,9 @@ void LayerManager::addPoint(const PenPoint &p)
         {
             drawColor = getPenColor();
         }
-        layer->addPoint(p, currentMode_, getCurrentToolWidth(), drawColor);
+        return layer->addPoint(p, currentMode_, getCurrentToolWidth(), drawColor); // 呼び出し&RECTを返す
     }
+    return {0, 0, 0, 0};
 }
 
 void LayerManager::clear()

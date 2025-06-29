@@ -37,7 +37,7 @@ public:
     // WM_COMMANDメッセージを処理します
     void HandleCommand(WPARAM wParam);
 
-    // ウィンドウサイズが変更されたときにUIを再配置します
+    // ウィンドウサイズが変更されたときにUIを再配置
     void ResizeControls(int parentWidth, int parentHeight);
 
     // getter

@@ -25,7 +25,7 @@ public:
     virtual const std::wstring &getName() const = 0;                                        // レイヤー名を取得する関数
     virtual void setName(const std::wstring &newName) = 0;                                  // レイヤー名をセットする関数
     virtual void draw(Gdiplus::Graphics *g, float opacity = 1.0f) const = 0;                // 描画関数
-    virtual void addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) = 0; // 点を追加する関数
+    virtual RECT addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color) = 0; // 点を追加する関数
     virtual void clear() = 0;                                                               // レイヤーをクリアする関数
     virtual void startNewStroke() = 0;                                                      // 新しい線が始まる命令
 

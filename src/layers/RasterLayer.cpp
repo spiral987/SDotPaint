@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <gdiplus.h>
 #include <numeric>
+#include <cmath>
 
 using namespace Gdiplus;
 
@@ -53,13 +54,13 @@ void RasterLayer::draw(Graphics *g, float opacity) const
     }
 }
 
-void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color)
+RECT RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF color)
 {
 
     // Bitmapからこのレイヤー専用のGraphicsオブジェクトを作成
     Graphics layerGraphics(hBitmap_.get());
     // アンチエイリアシングを有効にして線を滑らかに
-    layerGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+    // layerGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
     if (lastPoint_.point.x != -1) // 最初の点ではない場合
     {
@@ -90,6 +91,17 @@ void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF
             penColor = Color(0, 0, 0, 0);
         }
 
+        // 更新された領域を計算する
+        RECT dirtyRect;
+        dirtyRect.left = min(lastPoint_.point.x, p.point.x);
+        dirtyRect.top = min(lastPoint_.point.y, p.point.y);
+        dirtyRect.right = max(lastPoint_.point.x, p.point.x);
+        dirtyRect.bottom = max(lastPoint_.point.y, p.point.y);
+
+        // ペンの太さ分だけ矩形を広げる（安全マージン）
+        int margin = (int)ceil(penWidth / 2.0f) + 2;
+        InflateRect(&dirtyRect, margin, margin);
+
         Pen pen(penColor, penWidth);
         // 線の先端を丸くする
         pen.SetStartCap(LineCapRound);
@@ -110,6 +122,7 @@ void RasterLayer::addPoint(const PenPoint &p, DrawMode mode, int width, COLORREF
         layerGraphics.DrawLine(&pen, lastPoint_.point.x, lastPoint_.point.y, p.point.x, p.point.y);
     }
     lastPoint_ = {p.point.x, p.point.y, p.pressure};
+    return {p.point.x, p.point.y, p.point.x, p.point.y}; // 差分更新のためにRECTを返す。（最初の点の場合はその点自身を返す）
 }
 
 // clear: ビットマップ全体を白で塗りつぶす
