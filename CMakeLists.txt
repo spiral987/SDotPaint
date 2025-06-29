@@ -8,31 +8,36 @@ project(SDotPaint VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# プロジェクトをUnicode対応にする（ウインドウタイトル用）
+add_compile_definitions(UNICODE)
+add_compile_definitions(_UNICODE)
+
+
 # 実行ファイル名を設定
 set(EXECUTABLE_NAME "SDotPaint")
 
-#======================================================================
+
 # ソースファイルの収集
-#======================================================================
-# srcディレクトリ以下のすべての.cppファイルを変数SOURCESに格納します。
-# これでファイルが増えても自動で認識してくれます。
+
+# srcディレクトリ以下のすべての.cppファイルを変数SOURCESに格納
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 
-#======================================================================
 # 実行ファイルの作成
-#======================================================================
-# 収集したソースファイルを使って実行ファイルを作成します。
+# 収集したソースファイルを使って実行ファイルを作成
 add_executable(${EXECUTABLE_NAME} WIN32 ${SOURCES})
 
 # add_executableの後にインクルードディレクトリを指定
 target_include_directories(${EXECUTABLE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
+# ソースファイルの文字コードをUTF-8として扱う設定 (MSVCコンパイラ用)
+if(MSVC)
+  target_compile_options(${EXECUTABLE_NAME} PRIVATE "/utf-8")
+endif()
 
-#======================================================================
+
 # リンクするライブラリの設定
-#======================================================================
-# 必要なWindowsのライブラリをリンクします。
+# 必要なWindowsのライブラリをリンク
 target_link_libraries(${EXECUTABLE_NAME}
     gdi32
     user32

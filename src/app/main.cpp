@@ -3,35 +3,22 @@
 #include <debugapi.h> // OutputDebugStringW を使う
 #include <CommCtrl.h>
 #include <string>
+#include <memory>
+#include <cmath> // 数学関数(atan2f)のために必要
+
 #include "core/LayerManager.h"
 #include "core/PenData.h"
-
-// 数学関数(atan2f)のために必要
-#include <cmath>
+#include "ui/UIManager.h"
 
 // GDI+のため
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
 using namespace Gdiplus;
 
-// UIコントロールのIDを定義
-#define ID_ADD_LAYER_BUTTON 1001
-#define ID_DELETE_LAYER_BUTTON 1002
-#define ID_LAYER_LISTBOX 1003
-
-// UIコントロールのハンドルを追加
-HWND hSlider = nullptr;      // スライダーのハンドルを保持
-HWND hStaticValue = nullptr; // 数値表示用
-HWND hLayerList = nullptr;   // レイヤーリストボックス
-HWND hAddButton = nullptr;   // 追加ボタン
-HWND hDelButton = nullptr;   // 削除ボタン
+// UIManagerのインスタンスを保持するユニークポインタ
+std::unique_ptr<UIManager> g_uiManager;
 
 ULONG_PTR gdiplusToken;
-
-// レイヤー名編集用のグローバル変数
-HWND hEdit = nullptr;          // 編集用エディットコントロールのハンドル
-WNDPROC oldEditProc = nullptr; // 元のエディットコントロールのプロシージャ
-int g_nEditingIndex = -1;      // 編集中のレイヤーのインデックス
 
 // ダブルバッファリング用のグローバル変数
 Bitmap *g_pBackBuffer = nullptr;
@@ -59,18 +46,15 @@ static bool g_isPenContact = false; // ペンの接触状態を自前で管理�
 // マウスリーブイベントをトラックするためのフラグ
 static bool g_bTrackingMouse = false;
 
-// 描画ポイント追加関数のプロトタイプ宣言
-void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager);
-
-// レイヤーリストを更新するヘルパー関数
-void UpdateLayerList(HWND hwnd, LayerManager &layerManager);
-
-// エディットコントロールのサブクラスプロシージャ
-LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+// 描画ポイント追加関数のプロトタイプ宣言
+void AddDrawingPoint(HWND hwnd, WPARAM wParam, LPARAM lParam, LayerManager &layer_manager);
+
+// エディットコントロールのサブクラスプロシージャ
+LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 // リストボックスのサブクラスプロシージャ
 LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -109,6 +93,8 @@ int WINAPI WinMain(
     wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);   // デフォルトの矢印カーソル
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1); // ウィンドウの背景色
+    wc.lpszClassName = L"SDotPaintWindow";         // ★クラス名を設定★
+
     if (!RegisterClassExW(&wc))
     {
         MessageBoxW(nullptr, L"ウィンドウクラスの登録に失敗しました！", L"エラー", MB_ICONERROR);
@@ -120,8 +106,8 @@ int WINAPI WinMain(
 
     HWND hwnd = CreateWindowExW(
         0,                                     // 拡張ウィンドウスタイル
-        CLASS_NAME,                            // 登録したウィンドウクラス名
-        L"My Paint Application",               // ウィンドウのタイトル
+        L"SDotPaintWindow",                    // ウィンドウのタイトル
+        L"DotPaint - お絵描きアプリ",          // ★ウィンドウタイトル★
         WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, // 最も一般的なウィンドウスタイル
         // 位置とサイズ (CW_USEDEFAULTでOSに任せる)
         CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
@@ -158,27 +144,6 @@ int WINAPI WinMain(
     return (int)msg.wParam;        // メッセージループが終了したときの戻り値
 }
 
-// レイヤーリストボックスを更新する関数
-void UpdateLayerList(HWND hwnd, LayerManager &layerManager)
-{
-    // リストボックスをクリア
-    SendMessage(hLayerList, LB_RESETCONTENT, 0, 0);
-
-    // LayerManagerからレイヤーのリストを取得してリストボックスに追加
-    const auto &layers = layerManager.getLayers();
-    for (const auto &layer : layers)
-    {
-        SendMessage(hLayerList, LB_ADDSTRING, 0, (LPARAM)layer->getName().c_str());
-    }
-
-    // 現在アクティブなレイヤーを選択状態にする
-    int activeIndex = layerManager.getActiveLayerIndex();
-    SendMessage(hLayerList, LB_SETCURSEL, activeIndex, 0);
-
-    // ウィンドウ全体を再描画
-    InvalidateRect(hwnd, NULL, TRUE);
-}
-
 COLORREF GetContrastingTextColor(COLORREF bgColor)
 {
     // 背景色の明るさを計算 (簡易的な方法)
@@ -196,62 +161,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-
-        // インスタンスハンドルを取得
-        HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE);
-
-        // 追加ボタン
-        hAddButton = CreateWindowExW(
-            0, L"BUTTON", L"レイヤー追加",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-            10, 10, 100, 30, hwnd, (HMENU)ID_ADD_LAYER_BUTTON, hInstance, NULL);
-
-        // 削除ボタン
-        hDelButton = CreateWindowExW(
-            0, L"BUTTON", L"レイヤー削除",
-            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-            120, 10, 100, 30, hwnd, (HMENU)ID_DELETE_LAYER_BUTTON, hInstance, NULL);
-
-        // レイヤーリストボックス (右側に配置)
-        RECT clientRect;
-        GetClientRect(hwnd, &clientRect);
-        hLayerList = CreateWindowExW(
-            WS_EX_CLIENTEDGE, L"LISTBOX", L"",
-            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_OWNERDRAWFIXED,
-            clientRect.right - 200, 10, 190, 200, // 右端から200px幅で配置
-            hwnd, (HMENU)ID_LAYER_LISTBOX, hInstance, NULL);
-
-        // リストボックスのサブクラス化
-        SetWindowSubclass(hLayerList, LayerListProc, 0, (DWORD_PTR)&layer_manager);
-
-        // スライダーコントロールの作成
-        hSlider = CreateWindowExW(
-            0,
-            TRACKBAR_CLASSW, // スライダークラス
-            L"Pen Size",
-            WS_CHILD | WS_VISIBLE | TBS_VERT, // 子ウィンドウ・可視・縦方向
-            10, 50,                           // X, Y座標
-            30, 500,                          // 幅, 高さ
-            hwnd,                             // 親ウィンドウ
-            (HMENU)1,                         // コントロールID
-            hInstance,
-            nullptr);
-
-        SendMessage(hSlider, TBM_SETRANGE, TRUE, MAKELPARAM(1, 100)); // スライダーの範囲を設定 (最小値1, 最大値100）
-        SendMessage(hSlider, TBM_SETPOS, TRUE, 5);                    // 初期位置を5に設定
-
-        hStaticValue = CreateWindowExW(
-            0,
-            L"STATIC", // コントロールのクラス名
-            L"5",      // 初期テキスト（ペンの初期値に合わせる）
-            WS_CHILD | WS_VISIBLE,
-            45, 50,   // X, Y座標（スライダーの右隣あたりに配置）
-            50, 20,   // 幅, 高さ
-            hwnd,     // 親ウィンドウ
-            (HMENU)2, // コントロールID（他と被らないように）
-            hInstance,
-            nullptr);
-
         // ウィンドウのクライアント領域のサイズを取得
         RECT rect;
         GetClientRect(hwnd, &rect);
@@ -263,11 +172,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         g_viewCenter.X = g_nClientWidth / 2.0f;
         g_viewCenter.Y = g_nClientHeight / 2.0f;
 
+        // ダブルバッファリング用のビットマップを作成
+        g_pBackBuffer = new Bitmap(g_nClientWidth, g_nClientHeight, PixelFormat32bppARGB);
+
         // 最初のレイヤーを追加し、リストを更新
         layer_manager.createNewRasterLayer(g_nClientWidth, g_nClientHeight, L"レイヤー1");
 
-        // リストボックスを初期更新
-        UpdateLayerList(hwnd, layer_manager);
+        // UIManagerを作成してUI処理をする
+        g_uiManager = std::make_unique<UIManager>(hwnd, layer_manager);
+        g_uiManager->CreateControls();
+        g_uiManager->SetupLayerListSubclass();
+        g_uiManager->UpdateLayerList();
 
         return 0;
     }
@@ -327,6 +242,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_MOUSEMOVE:
     {
 
+        // UIManager経由でレイヤーリストのハンドルを取得
+        HWND hLayerList = nullptr;
+        if (g_uiManager)
+        {
+            hLayerList = g_uiManager->GetLayerListHandle();
+        }
+
         POINT pt = {LOWORD(lParam), HIWORD(lParam)};
         HWND hChildUnderCursor = ChildWindowFromPoint(hwnd, pt);
 
@@ -348,81 +270,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     // ボタンやリスト
     case WM_COMMAND:
     {
-        int wmId = LOWORD(wParam);
-        int wmEvent = HIWORD(wParam);
 
-        switch (wmId)
+        if (g_uiManager)
         {
-        case ID_ADD_LAYER_BUTTON:
-        {
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            layer_manager.addNewRasterLayer(rect.right - rect.left, rect.bottom - rect.top);
-            UpdateLayerList(hwnd, layer_manager); // リストを更新
-            SetFocus(hwnd);
-            break;
-        }
-        case ID_DELETE_LAYER_BUTTON:
-        {
-            layer_manager.deleteActiveLayer();
-            UpdateLayerList(hwnd, layer_manager); // リストを更新
-            SetFocus(hwnd);
-            break;
-        }
-
-        case ID_LAYER_LISTBOX:
-        {
-
-            // 名称変更のため ダブルクリックされた場合
-            if (wmEvent == LBN_DBLCLK)
-            {
-                // 選択されている項目のインデックスを取得
-                int selectedIndex = SendMessage(hLayerList, LB_GETCURSEL, 0, 0);
-                if (selectedIndex != LB_ERR)
-                {
-                    g_nEditingIndex = selectedIndex; // 編集中のインデックスを保存
-
-                    // 選択項目の矩形（位置とサイズ）を取得
-                    RECT itemRect;
-                    SendMessage(hLayerList, LB_GETITEMRECT, selectedIndex, (LPARAM)&itemRect);
-
-                    // 編集用エディットコントロールを作成
-                    hEdit = CreateWindowExW(
-                        0, L"EDIT", L"",
-                        WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                        itemRect.left, itemRect.top, itemRect.right - itemRect.left, itemRect.bottom - itemRect.top,
-                        hLayerList, // 親をリストボックスにする
-                        (HMENU)999, // 独自のID
-                        (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE),
-                        NULL);
-
-                    // 現在のレイヤー名を設定
-                    const auto &layers = layer_manager.getLayers();
-                    SetWindowTextW(hEdit, layers[selectedIndex]->getName().c_str());
-
-                    // エディットコントロールのフォントをリストボックスに合わせる
-                    SendMessage(hEdit, WM_SETFONT, SendMessage(hLayerList, WM_GETFONT, 0, 0), TRUE);
-
-                    // エディットコントロールのプロシージャをサブクラス化
-                    SetWindowSubclass(hEdit, EditControlProc, 0, (DWORD_PTR)&layer_manager);
-
-                    // エディットコントロールにフォーカスを合わせ、テキストを全選択
-                    SetFocus(hEdit);
-                    SendMessage(hEdit, EM_SETSEL, 0, -1);
-                }
-            }
-            // 選択が変更された場合
-            else if (wmEvent == LBN_SELCHANGE)
-            {
-                int selectedIndex = SendMessage(hLayerList, LB_GETCURSEL, 0, 0);
-                if (selectedIndex != LB_ERR)
-                {
-                    layer_manager.setActiveLayer(selectedIndex);
-                    InvalidateRect(hwnd, NULL, FALSE); // 再描画
-                }
-            }
-            break;
-        }
+            g_uiManager->HandleCommand(wParam);
         }
         return 0;
     }
@@ -444,9 +295,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             layer_manager.setDrawMode(DrawMode::Eraser);
             { // 変数スコープを明確にするための括弧
                 int width = layer_manager.getCurrentToolWidth();
-                SendMessage(hSlider, TBM_SETPOS, TRUE, width); // ペンのふとさをスライダーに適用
-                // テキストも更新
-                SetWindowTextW(hStaticValue, std::to_wstring(width).c_str());
+                g_uiManager->SetSliderValue(width);
+                g_uiManager->UpdateStaticValue(width);
             }
             break;
         }
@@ -456,8 +306,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             layer_manager.setDrawMode(DrawMode::Pen);
             {
                 int width = layer_manager.getCurrentToolWidth();
-                SendMessage(hSlider, TBM_SETPOS, TRUE, width);
-                SetWindowTextW(hStaticValue, std::to_wstring(width).c_str());
+                g_uiManager->SetSliderValue(width);
+                g_uiManager->UpdateStaticValue(width);
             }
             break;
         }
@@ -492,10 +342,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_VSCROLL:
     {
         // スライダーからのメッセージか確認
-        if ((HWND)lParam == hSlider)
+        if (g_uiManager && (HWND)lParam == g_uiManager->GetSliderHandle())
         {
-            // スライダーの現在の位置を取得
-            int newWidth = SendMessage(hSlider, TBM_GETPOS, 0, 0);
+            int newWidth = g_uiManager->GetSliderValue();
 
             // 現在のモードに応じて、対応するツールの太さを更新
             if (layer_manager.getCurrentMode() == DrawMode::Pen)
@@ -507,8 +356,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 layer_manager.setEraserWidth(newWidth);
             }
 
-            // 静的テキストの表示を更新
-            SetWindowTextW(hStaticValue, std::to_wstring(newWidth).c_str());
+            g_uiManager->UpdateStaticValue(newWidth);
 
             // フォーカスをメインウィンドウに戻す(これが無いとスライダーから抜け出せなくなる)
             SetFocus(hwnd);
@@ -634,7 +482,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                 // 親ウィンドウ（キャンバス）とレイヤーリストを再描画
                 InvalidateRect(hwnd, NULL, FALSE);
-                InvalidateRect(hLayerList, NULL, FALSE);
+                InvalidateRect(g_uiManager->GetLayerListHandle(), NULL, FALSE);
             }
         }
         return 0;
@@ -788,7 +636,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     InvalidateRect(hwnd, NULL, FALSE);
 
                     // レイヤーリストボックスも再描画するよう依頼する
-                    InvalidateRect(hLayerList, NULL, FALSE);
+                    InvalidateRect(g_uiManager->GetLayerListHandle(), NULL, FALSE);
                 }
             }
         }
@@ -835,6 +683,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         // 新しいサイズのバックバッファを作成（GDI+オブジェクトなのでPixelFormatを指定する）
         g_pBackBuffer = new Bitmap(g_nClientWidth, g_nClientHeight, PixelFormat32bppARGB);
+
+        // UIManagerで再配置
+        if (g_uiManager)
+        {
+            g_uiManager->ResizeControls(g_nClientWidth, g_nClientHeight);
+        }
 
         // ここで再描画をかけておくと、リサイズ時に描画が追従する
         InvalidateRect(hwnd, NULL, FALSE);
@@ -1006,10 +860,10 @@ LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
         GetWindowTextW(hwnd, buffer, 256);
 
         // レイヤー名を更新
-        layer_manager->renameLayer(g_nEditingIndex, buffer);
+        layer_manager->renameLayer(g_uiManager->GetEditingIndex(), buffer);
 
-        // リストボックスを更新するためにメインウィンドウに通知
-        UpdateLayerList(GetParent(GetParent(hwnd)), *layer_manager);
+        // リストボックスを更新
+        g_uiManager->UpdateLayerList();
 
         // エディットボックスを破棄
         DestroyWindow(hwnd);
