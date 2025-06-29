@@ -46,6 +46,10 @@ static bool g_isPenContact = false; // ペンの接触状態を自前で管理�
 // マウスリーブイベントをトラックするためのフラグ
 static bool g_bTrackingMouse = false;
 
+// グローバル変数に「前回のスクリーン座標」を保持する変数を追加
+static POINT g_lastScreenPoint = {-1, -1};
+static UINT32 g_lastPressure = 0;
+
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -187,6 +191,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
     }
 
+    // メニューをアプリケーション側で描画してくださいというメッセージが来たら(オーナードロー)
     case WM_DRAWITEM:
     {
         // このメッセージがレイヤーリストボックスからのものか確認
@@ -444,7 +449,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             layer_manager.startNewStroke();
 
-            // ペンが押された「最初の1点」を描画する
             POINTER_PEN_INFO penInfo;
             UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
             if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
@@ -453,41 +457,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 ScreenToClient(hwnd, &p);
                 UINT32 pressure = penInfo.pressure;
 
-                // === ★★★ 正しい逆変換処理 ★★★ ===
-
-                // GDI+のMatrixオブジェクトを使って逆変換を計算
+                // ワールド座標に変換して、レイヤーのデータに記録（これは永続化のため）
                 Matrix transformMatrix;
                 float centerX = g_nClientWidth / 2.0f;
                 float centerY = g_nClientHeight / 2.0f;
-
-                // WM_PAINTの描画時と全く同じ順番で、順方向の変換行列を作成する
                 transformMatrix.Translate(centerX, centerY);
                 transformMatrix.Rotate(g_rotationAngle);
                 transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
                 transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-
-                // 作成した順方向の行列から、逆行列を計算
                 transformMatrix.Invert();
-
-                // スクリーン上のペン座標をPointFに変換
                 PointF pointF = {(float)p.x, (float)p.y};
-
-                // 逆行列を使って、スクリーン座標をワールド座標に変換
                 transformMatrix.TransformPoints(&pointF, 1);
-
-                // ワールド座標に変換された点をレイヤーに記録
                 layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
 
-                // =====================================
-
-                // 親ウィンドウ（キャンバス）とレイヤーリストを再描画
-                InvalidateRect(hwnd, NULL, FALSE);
-                InvalidateRect(g_uiManager->GetLayerListHandle(), NULL, FALSE);
+                // 最初の点のスクリーン座標と筆圧を保存
+                g_lastScreenPoint = p;
+                g_lastPressure = pressure;
             }
+            return 0;
         }
-        return 0;
     }
-
     case WM_POINTERUPDATE:
     {
         // 視点移動処理
@@ -560,7 +549,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 return 0;
             }
 
-            // ★ズームモード中の処理
+            // ズームモード中の処理
             else if (g_isZoomMode)
             {
                 POINTER_INFO pointerInfo;
@@ -596,57 +585,90 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             {
                 // 描画処理
 
-                POINTER_PEN_INFO penInfo;
-                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-                // ペンが画面に触れている時（描画処理）のみを処理する
-                if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
+                if (IS_POINTER_INCONTACT_WPARAM(wParam))
                 {
-                    POINT p = penInfo.pointerInfo.ptPixelLocation;
-                    ScreenToClient(hwnd, &p);
-                    UINT32 pressure = penInfo.pressure;
+                    POINTER_PEN_INFO penInfo;
+                    UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+                    if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
+                    {
+                        POINT p = penInfo.pointerInfo.ptPixelLocation;
+                        ScreenToClient(hwnd, &p);
+                        UINT32 pressure = penInfo.pressure;
 
-                    // === ★★★ 正しい逆変換処理 ★★★ ===
+                        // 1. ワールド座標に変換し、レイヤーのデータに記録（永続化のため）
+                        Matrix transformMatrix;
+                        float centerX = g_nClientWidth / 2.0f;
+                        float centerY = g_nClientHeight / 2.0f;
+                        transformMatrix.Translate(centerX, centerY);
+                        transformMatrix.Rotate(g_rotationAngle);
+                        transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
+                        transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+                        transformMatrix.Invert();
+                        PointF pointF = {(float)p.x, (float)p.y};
+                        transformMatrix.TransformPoints(&pointF, 1);
+                        layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
 
-                    // GDI+のMatrixオブジェクトを使って逆変換を計算
-                    Matrix transformMatrix;
-                    float centerX = g_nClientWidth / 2.0f;
-                    float centerY = g_nClientHeight / 2.0f;
+                        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ここからが新しい超高速描画 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-                    // WM_PAINTの描画時と全く同じ順番で、順方向の変換行列を作成する
-                    transformMatrix.Translate(centerX, centerY);
-                    transformMatrix.Rotate(g_rotationAngle);
-                    transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-                    transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
+                        // 2. 画面に直接、"アンチエイリアスのかかった"軽量な線を描画する
+                        HDC hdc = GetDC(hwnd);
+                        if (hdc)
+                        {
+                            Graphics screenGraphics(hdc);
+                            screenGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-                    // 作成した順方向の行列から、逆行列を計算
-                    transformMatrix.Invert();
+                            int maxToolWidth = layer_manager.getCurrentToolWidth();
+                            COLORREF toolColorRef = layer_manager.getPenColor();
+                            if (layer_manager.getCurrentMode() == DrawMode::Eraser)
+                            {
+                                toolColorRef = RGB(255, 255, 255);
+                            }
 
-                    // スクリーン上のペン座標をPointFに変換
-                    PointF pointF = {(float)p.x, (float)p.y};
+                            // 【修正点1】RasterLayer同様、平均筆圧で太さを計算
+                            float currentPressureFactor = (float)pressure / 1024.0f;
+                            float lastPressureFactor = (float)g_lastPressure / 1024.0f;
+                            float averagePressureFactor = (currentPressureFactor + lastPressureFactor) / 2.0f;
+                            float pressureWidth = maxToolWidth * averagePressureFactor;
 
-                    // 逆行列を使って、スクリーン座標をワールド座標に変換
-                    transformMatrix.TransformPoints(&pointF, 1);
+                            float previewWidth = pressureWidth * g_zoomFactor;
+                            if (previewWidth < 1.0f)
+                            {
+                                previewWidth = 1.0f;
+                            }
 
-                    // ワールド座標に変換された点をレイヤーに記録
-                    layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
+                            Color penColor(GetRValue(toolColorRef), GetGValue(toolColorRef), GetBValue(toolColorRef));
+                            Pen gdiplusPen(penColor, previewWidth);
 
-                    // =====================================
+                            // 【修正点2】RasterLayerの設定と完全に一致させる
+                            gdiplusPen.SetStartCap(LineCapRound);
+                            gdiplusPen.SetEndCap(LineCapRound);
+                            gdiplusPen.SetLineJoin(LineJoinRound); // 角を滑らかにする設定を追加
 
-                    // 親ウィンドウ（キャンバス）を再描画
-                    InvalidateRect(hwnd, NULL, FALSE);
+                            if (g_lastScreenPoint.x != -1)
+                            {
+                                screenGraphics.DrawLine(&gdiplusPen, g_lastScreenPoint.x, g_lastScreenPoint.y, p.x, p.y);
+                            }
 
-                    // レイヤーリストボックスも再描画するよう依頼する
-                    InvalidateRect(g_uiManager->GetLayerListHandle(), NULL, FALSE);
+                            ReleaseDC(hwnd, hdc);
+                        }
+
+                        // 現在の情報を「直前の情報」として更新
+                        g_lastScreenPoint = p;
+                        g_lastPressure = pressure;
+                    }
                 }
             }
         }
-        // ホバー時の処理は LayerListProc に移譲したので、ここでは何もしない
+        // ホバー時の処理は LayerListProc に移譲
         return 0;
     }
 
     case WM_POINTERUP:
     {
         g_isPenContact = false;
+        // 前回のスクリーン座標をリセット
+        g_lastScreenPoint = {-1, -1};
+        g_lastPressure = 0;
 
         // OutputDebugStringW(L"--- WM_POINTERUP ---\n");
 
@@ -667,6 +689,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             // ペンが離れたら、現在のストロークを終了する
             layer_manager.startNewStroke();
+            // 【重要】ペンを離したときに、最終的な正しい絵を再描画する
+            InvalidateRect(hwnd, NULL, FALSE);
+
+            if (g_uiManager)
+            {
+                InvalidateRect(g_uiManager->GetLayerListHandle(), NULL, FALSE);
+            }
         }
 
         return 0;
@@ -704,6 +733,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PostQuitMessage(0); // メッセージループを終了させる
         return 0;           // ウィンドウを描画する必要があるときのメッセージ
     }
+
+    // ウインドウが再表示されたタイミング
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
@@ -712,35 +743,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // バックバッファがまだ作成されていない場合は何もしない
         if (g_pBackBuffer)
         {
-            // バックバッファからグラフィックスオブジェクトを作成
+            // 1. バックバッファのGraphicsオブジェクトを取得
             Graphics backBufferGraphics(g_pBackBuffer);
-            // 背景を白でクリア
+
+            // 2. バックバッファ全体をクリアし、全レイヤーを描画（全体を再描画）
             backBufferGraphics.Clear(Color(255, 255, 255, 255));
-            // アンチエイリアスを有効にする
             backBufferGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-            // ビュー変換
             Matrix transformMatrix;
             float centerX = g_nClientWidth / 2.0f;
             float centerY = g_nClientHeight / 2.0f;
-
-            // 1. ビューの中心がウィンドウの中心に来るように移動
             transformMatrix.Translate(centerX, centerY);
-            // 2. 回転
             transformMatrix.Rotate(g_rotationAngle);
-            // 3. 縮尺変換
             transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-            // 4. ワールド座標のビュー中心を原点に持ってくる
             transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-
             backBufferGraphics.SetTransform(&transformMatrix);
 
-            // LayerManagerに描画を依頼（ホバー状態に応じた描画が行われる）
             layer_manager.draw(&backBufferGraphics);
 
-            // 画面にバックバッファの内容を一度に転送
+            // 3. 【最適化の鍵】完成したバックバッファから、「無効化された領域(ps.rcPaint)だけ」を画面にコピー
             Graphics screenGraphics(hdc);
-            screenGraphics.DrawImage(g_pBackBuffer, 0, 0);
+            screenGraphics.DrawImage(g_pBackBuffer, ps.rcPaint.left, ps.rcPaint.top,
+                                     ps.rcPaint.left, ps.rcPaint.top,
+                                     ps.rcPaint.right - ps.rcPaint.left,
+                                     ps.rcPaint.bottom - ps.rcPaint.top,
+                                     UnitPixel);
         }
 
         EndPaint(hwnd, &ps);
