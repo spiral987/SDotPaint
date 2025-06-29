@@ -43,6 +43,8 @@ static PointF g_zoomCenterWorld = {0.0f, 0.0f}; // ズーム基点のワール�
 
 static bool g_isPenContact = false; // ペンの接触状態を自前で管理するフラグ
 
+static bool g_isTransforming = false; // 視点操作中かどうかのフラグ
+
 // マウスリーブイベントをトラックするためのフラグ
 static bool g_bTrackingMouse = false;
 
@@ -378,6 +380,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // 視点移動モード中の処理
         if (g_isPanMode)
         {
+            g_isTransforming = true; // ★操作開始
             // ペンの現在位置を取得して、移動開始点として保存
             POINTER_INFO pointerInfo;
             UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
@@ -393,6 +396,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // 回転モード中の処理
         else if (g_isRotateMode)
         {
+            g_isTransforming = true; // ★操作開始
             POINTER_INFO pointerInfo;
             UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
             if (GetPointerInfo(pointerId, &pointerInfo))
@@ -411,6 +415,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         // ズームモード中の処理
         else if (g_isZoomMode)
         {
+            g_isTransforming = true; // ★操作開始
             POINTER_INFO pointerInfo;
             UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
             if (GetPointerInfo(pointerId, &pointerInfo))
@@ -665,6 +670,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_POINTERUP:
     {
+        if (g_isTransforming)
+        {
+            g_isTransforming = false;          // ★操作終了
+            InvalidateRect(hwnd, NULL, FALSE); // ★最後に最高品質で描き直すよう要求
+        }
+
         g_isPenContact = false;
         // 前回のスクリーン座標をリセット
         g_lastScreenPoint = {-1, -1};
@@ -746,9 +757,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             // 1. バックバッファのGraphicsオブジェクトを取得
             Graphics backBufferGraphics(g_pBackBuffer);
 
-            // 2. バックバッファ全体をクリアし、全レイヤーを描画（全体を再描画）
+            // 2. 描画を始める前に、バックバッファ全体を白でクリアする
             backBufferGraphics.Clear(Color(255, 255, 255, 255));
-            backBufferGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
+
+            // 視点操作中なら、速度優先の最も軽い補間モードに設定
+            if (g_isTransforming)
+            {
+                backBufferGraphics.SetInterpolationMode(InterpolationModeNearestNeighbor);
+            }
+            // 通常時なら、品質優先の補間モードに設定
+            else
+            {
+                backBufferGraphics.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+            }
 
             Matrix transformMatrix;
             float centerX = g_nClientWidth / 2.0f;

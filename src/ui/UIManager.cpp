@@ -136,7 +136,7 @@ void UIManager::UpdateLayerList()
     SendMessage(m_hLayerList, LB_SETCURSEL, activeIndex, 0);
 
     // ウィンドウ全体を再描画
-    InvalidateRect(m_hParent, nullptr, TRUE);
+    InvalidateRect(m_hParent, nullptr, FALSE);
 }
 
 int UIManager::GetSliderValue() const
