@@ -1,104 +1,18 @@
+#include <windows.h>
+
 #include "globals.h"
 #include "MessageHandler.h"
 #include "core/LayerManager.h"
 #include "ui/UIManager.h"
 
-MessageHandler::MessageHandler(HWND hwnd) : m_hwnd(hwnd)
+MessageHandler::MessageHandler(HWND hwnd)
+    : m_hwnd(hwnd),
+      m_viewManager(0, 0),
+      m_isTransforming(false),
+      m_lastScreenPoint({-1, -1}),
+      m_lastPressure(0)
 {
     this->HandleCreate();
-}
-
-LRESULT MessageHandler::ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-
-    // メニューをアプリケーション側で描画してくださいというメッセージが来たら(オーナードロー)
-    case WM_DRAWITEM:
-    {
-        return this->HandleDrawItem(wParam, lParam);
-        break;
-    }
-
-    // キーを離したときの処理
-    case WM_KEYUP:
-    {
-        this->HandleKeyUp(wParam, lParam);
-        return 0;
-    }
-
-    case WM_MOUSEMOVE:
-    {
-
-        return 0; // WM_MOUSEMOVEはここで処理を終える
-    }
-
-    // ボタンやリスト
-    case WM_COMMAND:
-    {
-        this->HandleCommand(wParam, lParam);
-        return 0;
-    }
-
-    case WM_KEYDOWN:
-    {
-        g_pMessageHandler->HandleKeyDown(wParam, lParam);
-        return 0;
-    }
-
-    case WM_VSCROLL:
-    {
-        this->HandleVScroll(wParam, lParam);
-        return 0;
-    }
-    case WM_POINTERDOWN:
-    {
-        this->HandlePointerDown(wParam, lParam);
-    }
-    case WM_POINTERUPDATE:
-    {
-        this->HandlePointerUpdate(wParam, lParam);
-
-        return 0;
-    }
-
-    case WM_POINTERUP:
-    {
-        this->HandlePointerUp(wParam, lParam);
-
-        return 0;
-    }
-
-    case WM_SIZE:
-    {
-
-        this->HandleSize(wParam, lParam);
-
-        return 0;
-    }
-
-    // ウィンドウが破棄されるときのメッセージ
-    case WM_DESTROY:
-    {
-        this->HandleDestroy(wParam, lParam);
-
-        return 0; // ウィンドウを描画する必要があるときのメッセージ
-    }
-
-    // ウインドウが再表示されたタイミング
-    case WM_PAINT:
-    {
-
-        this->HandlePaint(wParam, lParam);
-
-        return 0;
-    }
-
-    default:
-        // 自分で処理しないメッセージは、デフォルトの処理に任せる（非常に重要）
-        return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
-    }
-    return 0;
 }
 
 void MessageHandler::HandleCreate()
@@ -110,9 +24,7 @@ void MessageHandler::HandleCreate()
     g_nClientWidth = rect.right - rect.left;
     g_nClientHeight = rect.bottom - rect.top;
 
-    // ビューの中心をウィンドウの中心に初期化
-    g_viewCenter.X = g_nClientWidth / 2.0f;
-    g_viewCenter.Y = g_nClientHeight / 2.0f;
+    m_viewManager.UpdateClientSize(g_nClientWidth, g_nClientHeight);
 
     // ダブルバッファリング用のビットマップを作成
     g_pBackBuffer = new Bitmap(g_nClientWidth, g_nClientHeight, PixelFormat32bppARGB);
@@ -261,71 +173,38 @@ void MessageHandler::HandlePointerDown(WPARAM wParam, LPARAM lParam)
     g_isPenContact = true;
     SetFocus(m_hwnd);
 
-    // 視点移動モード中の処理
-    if (g_isPanMode)
+    POINTER_INFO pointerInfo;
+    UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+    if (!GetPointerInfo(pointerId, &pointerInfo))
     {
-        g_isTransforming = true; // ★操作開始
-        // ペンの現在位置を取得して、移動開始点として保存
-        POINTER_INFO pointerInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (GetPointerInfo(pointerId, &pointerInfo))
-        {
-            g_panLastPoint = pointerInfo.ptPixelLocation;
-            ScreenToClient(m_hwnd, &g_panLastPoint);
-            SetCapture(m_hwnd); // ウィンドウ外にマウスが出てもメッセージを補足する
-        }
-        return; // 描画処理は行わない
-    }
-
-    // 回転モード中の処理
-    else if (g_isRotateMode)
-    {
-        g_isTransforming = true; // ★操作開始
-        POINTER_INFO pointerInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (GetPointerInfo(pointerId, &pointerInfo))
-        {
-            POINT currentPoint = pointerInfo.ptPixelLocation;
-            ScreenToClient(m_hwnd, &currentPoint);
-
-            // ウィンドウ中心と現在地の角度を計算して保存
-            float dx = (float)currentPoint.x - (g_nClientWidth / 2.0f);
-            float dy = (float)currentPoint.y - (g_nClientHeight / 2.0f);
-            g_startAngle = atan2f(dy, dx);
-        }
         return;
     }
 
-    // ズームモード中の処理
-    else if (g_isZoomMode)
+    POINT currentPoint = pointerInfo.ptPixelLocation;
+    ScreenToClient(m_hwnd, &currentPoint);
+
+    // 視点操作モード（パン、ズーム、回転）の場合
+    if (g_isPanMode || g_isRotateMode || g_isZoomMode)
     {
-        g_isTransforming = true; // ★操作開始
-        POINTER_INFO pointerInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (GetPointerInfo(pointerId, &pointerInfo))
+        m_isTransforming = true;
+        m_operationStartPoint = currentPoint;
+        if (g_isPanMode)
         {
-            POINT p = pointerInfo.ptPixelLocation;
-            ScreenToClient(m_hwnd, &p);
-
-            // ズーム操作の開始情報を記録
-            g_zoomStartPoint = p;
-            g_baseZoomFactor = g_zoomFactor;
-
-            // ズームの基点となるワールド座標を計算して保存
-            Matrix transformMatrix;
-            float centerX = g_nClientWidth / 2.0f;
-            float centerY = g_nClientHeight / 2.0f;
-            transformMatrix.Translate(centerX, centerY);
-            transformMatrix.Rotate(g_rotationAngle);
-            transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-            transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-            transformMatrix.Invert();
-            PointF pointF = {(float)p.x, (float)p.y};
-            transformMatrix.TransformPoints(&pointF, 1);
-            g_zoomCenterWorld = pointF;
+            m_viewManager.PanStart(currentPoint);
         }
+        if (g_isRotateMode)
+        {
+            m_viewManager.RotateStart();
+        }
+        if (g_isZoomMode)
+        {
+            m_viewManager.ZoomStart();
+        }
+        // RotateStart, ZoomStartは空なので呼ばなくてもOK
+        SetCapture(m_hwnd);
         return;
     }
+
     else
     {
         // 右ボタンがクリックされた場合はクリア処理
@@ -346,21 +225,12 @@ void MessageHandler::HandlePointerDown(WPARAM wParam, LPARAM lParam)
             ScreenToClient(m_hwnd, &p);
             UINT32 pressure = penInfo.pressure;
 
-            // ワールド座標に変換して、レイヤーのデータに記録（これは永続化のため）
-            Matrix transformMatrix;
-            float centerX = g_nClientWidth / 2.0f;
-            float centerY = g_nClientHeight / 2.0f;
-            transformMatrix.Translate(centerX, centerY);
-            transformMatrix.Rotate(g_rotationAngle);
-            transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-            transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-            transformMatrix.Invert();
-            PointF pointF = {(float)p.x, (float)p.y};
-            transformMatrix.TransformPoints(&pointF, 1);
-            layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
+            // ワールド座標への変換をViewManagerに任せる
+            PointF worldPoint = m_viewManager.ScreenToWorld(p);
+            layer_manager.addPoint({(LONG)worldPoint.X, (LONG)worldPoint.Y, pressure});
 
-            // 最初の点のスクリーン座標と筆圧を保存
-            g_lastScreenPoint = p;
+            // 最初の点の筆圧を保存
+            m_lastScreenPoint = p;
             g_lastPressure = pressure;
         }
         return;
@@ -369,182 +239,114 @@ void MessageHandler::HandlePointerDown(WPARAM wParam, LPARAM lParam)
 
 void MessageHandler::HandlePointerUpdate(WPARAM wParam, LPARAM lParam)
 {
+    // ペンがキャンバスに接触していない場合は何もしない
+    if (!g_isPenContact)
+        return;
+
     // 視点移動処理
-    if (g_isPenContact)
+    if (m_isTransforming)
     {
-        // 視点移動モード中の処理
+        POINTER_INFO pointerInfo;
+        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+        if (!GetPointerInfo(pointerId, &pointerInfo))
+            return;
+
+        POINT currentPoint = pointerInfo.ptPixelLocation;
+        ScreenToClient(m_hwnd, &currentPoint);
+
+        // 各モードに応じてViewManagerのメソッドを呼び出すだけ！
         if (g_isPanMode)
         {
-            OutputDebugStringW(L"    -> Pan processing branch ENTERED.\n");
-
-            POINTER_INFO pointerInfo;
-            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-            if (GetPointerInfo(pointerId, &pointerInfo))
-            {
-                POINT currentPoint = pointerInfo.ptPixelLocation;
-                ScreenToClient(m_hwnd, &currentPoint);
-
-                // スクリーン座標での移動量
-                float dx = (float)currentPoint.x - (float)g_panLastPoint.x;
-                float dy = (float)currentPoint.y - (float)g_panLastPoint.y;
-
-                // 移動量を現在の回転角度の逆方向に回転させてから、ビュー中心に適用
-                float angleRad = -g_rotationAngle * (3.14159265f / 180.0f);
-                float rotatedDx = dx * cosf(angleRad) - dy * sinf(angleRad);
-                float rotatedDy = dx * sinf(angleRad) + dy * cosf(angleRad);
-
-                if (g_zoomFactor > 0.0f)
-                {
-                    rotatedDx /= g_zoomFactor;
-                    rotatedDy /= g_zoomFactor;
-                }
-
-                // 移動量を計算してオフセットに加算
-                g_viewCenter.X -= rotatedDx;
-                g_viewCenter.Y -= rotatedDy;
-
-                // 現在位置を次の計算のために保存
-                g_panLastPoint = currentPoint;
-
-                // 画面を再描画
-                InvalidateRect(m_hwnd, NULL, FALSE);
-            }; // 描画処理は行わない
+            m_viewManager.PanUpdate(currentPoint);
         }
-
-        // 回転モード中の処理
         else if (g_isRotateMode)
         {
-            POINTER_INFO pointerInfo;
-            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-            if (GetPointerInfo(pointerId, &pointerInfo))
-            {
-                POINT currentPoint = pointerInfo.ptPixelLocation;
-                ScreenToClient(m_hwnd, &currentPoint);
-
-                // ウィンドウ中心と現在地の角度を計算
-                float dx = (float)currentPoint.x - (g_nClientWidth / 2.0f);
-                float dy = (float)currentPoint.y - (g_nClientHeight / 2.0f);
-                float currentAngle = atan2f(dy, dx);
-
-                // 開始角度からの差分を計算し、総回転角度に加える
-                float deltaAngle = currentAngle - g_startAngle;
-                g_rotationAngle += deltaAngle * (180.0f / 3.14159265f); // ラジアンから度に変換
-
-                // 次のUPDATEのために、開始角度を現在の角度に更新
-                g_startAngle = currentAngle;
-
-                InvalidateRect(m_hwnd, NULL, FALSE);
-            }
-            return;
+            // 回転は開始点からの差分で計算するので、開始点も渡す
+            m_viewManager.RotateUpdate(currentPoint, m_operationStartPoint);
         }
-
-        // ズームモード中の処理
         else if (g_isZoomMode)
         {
-            POINTER_INFO pointerInfo;
-            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-            if (GetPointerInfo(pointerId, &pointerInfo))
-            {
-                POINT currentPoint = pointerInfo.ptPixelLocation;
-                ScreenToClient(m_hwnd, &currentPoint);
-
-                float totalDeltaX = (float)currentPoint.x - (float)g_zoomStartPoint.x;
-                float oldZoom = g_zoomFactor;
-
-                // 指数関数的にズーム率を変化させると、より自然な操作感になる
-                g_zoomFactor = g_baseZoomFactor * expf(totalDeltaX * 0.005f);
-
-                // ズーム率に下限と上限を設ける
-                if (g_zoomFactor < 0.1f)
-                    g_zoomFactor = 0.1f;
-                if (g_zoomFactor > 10.0f)
-                    g_zoomFactor = 10.0f;
-
-                // ズーム基点がズレないようにビューの中心を補正
-                if (g_zoomFactor > 0.0f)
-                {
-                    g_viewCenter.X = g_zoomCenterWorld.X + (g_viewCenter.X - g_zoomCenterWorld.X) * (oldZoom / g_zoomFactor);
-                    g_viewCenter.Y = g_zoomCenterWorld.Y + (g_viewCenter.Y - g_zoomCenterWorld.Y) * (oldZoom / g_zoomFactor);
-                }
-                InvalidateRect(m_hwnd, NULL, FALSE);
-            }
-            return;
+            // ズームも開始点からの差分で計算する
+            m_viewManager.ZoomUpdate(currentPoint, m_operationStartPoint);
         }
-        else
+
+        // 変更を画面に反映させる
+        InvalidateRect(m_hwnd, NULL, FALSE);
+        return; // 視点操作中は描画処理を行わない
+    }
+    else
+    {
+        // 描画処理
+
+        if (IS_POINTER_INCONTACT_WPARAM(wParam))
         {
-            // 描画処理
-
-            if (IS_POINTER_INCONTACT_WPARAM(wParam))
+            POINTER_PEN_INFO penInfo;
+            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+            if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
             {
-                POINTER_PEN_INFO penInfo;
-                UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-                if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
+                POINT p = penInfo.pointerInfo.ptPixelLocation;
+                ScreenToClient(m_hwnd, &p);
+                UINT32 pressure = penInfo.pressure;
+
+                // 1. ワールド座標に変換し、レイヤーのデータに記録（永続化のため）
+                // ワールド座標への変換をViewManagerに任せる
+                PointF worldPoint = m_viewManager.ScreenToWorld(p);
+                layer_manager.addPoint({(LONG)worldPoint.X, (LONG)worldPoint.Y, pressure});
+
+                // 2. 画面に直接、"アンチエイリアスのかかった"軽量な線を描画する
+                HDC hdc = GetDC(m_hwnd);
+                if (hdc)
                 {
-                    POINT p = penInfo.pointerInfo.ptPixelLocation;
-                    ScreenToClient(m_hwnd, &p);
-                    UINT32 pressure = penInfo.pressure;
+                    Graphics screenGraphics(hdc);
+                    screenGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
 
-                    // 1. ワールド座標に変換し、レイヤーのデータに記録（永続化のため）
+                    // プレビュー描画にも、完全な変換行列を適用する
                     Matrix transformMatrix;
-                    float centerX = g_nClientWidth / 2.0f;
-                    float centerY = g_nClientHeight / 2.0f;
-                    transformMatrix.Translate(centerX, centerY);
-                    transformMatrix.Rotate(g_rotationAngle);
-                    transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-                    transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-                    transformMatrix.Invert();
-                    PointF pointF = {(float)p.x, (float)p.y};
-                    transformMatrix.TransformPoints(&pointF, 1);
-                    layer_manager.addPoint({(LONG)pointF.X, (LONG)pointF.Y, pressure});
+                    m_viewManager.GetTransformMatrix(&transformMatrix);
+                    screenGraphics.SetTransform(&transformMatrix);
 
-                    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ここからが新しい超高速描画 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-                    // 2. 画面に直接、"アンチエイリアスのかかった"軽量な線を描画する
-                    HDC hdc = GetDC(m_hwnd);
-                    if (hdc)
+                    int maxToolWidth = layer_manager.getCurrentToolWidth();
+                    COLORREF toolColorRef = layer_manager.getPenColor();
+                    if (layer_manager.getCurrentMode() == DrawMode::Eraser)
                     {
-                        Graphics screenGraphics(hdc);
-                        screenGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
-
-                        int maxToolWidth = layer_manager.getCurrentToolWidth();
-                        COLORREF toolColorRef = layer_manager.getPenColor();
-                        if (layer_manager.getCurrentMode() == DrawMode::Eraser)
-                        {
-                            toolColorRef = RGB(255, 255, 255);
-                        }
-
-                        // 【修正点1】RasterLayer同様、平均筆圧で太さを計算
-                        float currentPressureFactor = (float)pressure / 1024.0f;
-                        float lastPressureFactor = (float)g_lastPressure / 1024.0f;
-                        float averagePressureFactor = (currentPressureFactor + lastPressureFactor) / 2.0f;
-                        float pressureWidth = maxToolWidth * averagePressureFactor;
-
-                        float previewWidth = pressureWidth * g_zoomFactor;
-                        if (previewWidth < 1.0f)
-                        {
-                            previewWidth = 1.0f;
-                        }
-
-                        Color penColor(GetRValue(toolColorRef), GetGValue(toolColorRef), GetBValue(toolColorRef));
-                        Pen gdiplusPen(penColor, previewWidth);
-
-                        // 【修正点2】RasterLayerの設定と完全に一致させる
-                        gdiplusPen.SetStartCap(LineCapRound);
-                        gdiplusPen.SetEndCap(LineCapRound);
-                        gdiplusPen.SetLineJoin(LineJoinRound); // 角を滑らかにする設定を追加
-
-                        if (g_lastScreenPoint.x != -1)
-                        {
-                            screenGraphics.DrawLine(&gdiplusPen, g_lastScreenPoint.x, g_lastScreenPoint.y, p.x, p.y);
-                        }
-
-                        ReleaseDC(m_hwnd, hdc);
+                        toolColorRef = RGB(255, 255, 255);
                     }
 
-                    // 現在の情報を「直前の情報」として更新
-                    g_lastScreenPoint = p;
-                    g_lastPressure = pressure;
+                    // RasterLayer同様、平均筆圧で太さを計算
+                    float currentPressureFactor = (float)pressure / 1024.0f;
+                    float lastPressureFactor = (float)g_lastPressure / 1024.0f;
+                    float averagePressureFactor = (currentPressureFactor + lastPressureFactor) / 2.0f;
+                    float pressureWidth = maxToolWidth * averagePressureFactor;
+
+                    // 変換行列で既にズームが適用されているので、プレビュー幅でズームを掛ける必要はなくなる
+                    float previewWidth = pressureWidth;
+                    if (previewWidth < 1.0f / m_viewManager.GetZoomFactor())
+                    {
+                        // どんなに細くても最低1ピクセルは表示されるように調整
+                        previewWidth = 1.0f / m_viewManager.GetZoomFactor();
+                    }
+
+                    Color penColor(GetRValue(toolColorRef), GetGValue(toolColorRef), GetBValue(toolColorRef));
+                    Pen gdiplusPen(penColor, previewWidth);
+
+                    // RasterLayerの設定と完全に一致させる
+                    gdiplusPen.SetStartCap(LineCapRound);
+                    gdiplusPen.SetEndCap(LineCapRound);
+                    gdiplusPen.SetLineJoin(LineJoinRound); // 角を滑らかにする設定を追加
+
+                    if (m_lastScreenPoint.x != -1)
+                    {
+                        // 描画する座標も、ワールド座標に変換したものを使う
+                        PointF lastWorldPoint = m_viewManager.ScreenToWorld(m_lastScreenPoint);
+                        screenGraphics.DrawLine(&gdiplusPen, lastWorldPoint, worldPoint);
+                    }
+
+                    ReleaseDC(m_hwnd, hdc);
                 }
+
+                // 現在の情報を「直前の情報」として更新
+                m_lastScreenPoint = p;
+                m_lastPressure = pressure;
             }
         }
     }
@@ -552,16 +354,15 @@ void MessageHandler::HandlePointerUpdate(WPARAM wParam, LPARAM lParam)
 
 void MessageHandler::HandlePointerUp(WPARAM wParam, LPARAM lParam)
 {
-    if (g_isTransforming)
+    if (m_isTransforming)
     {
-        g_isTransforming = false;            // ★操作終了
+        m_isTransforming = false;            // ★操作終了
         InvalidateRect(m_hwnd, NULL, FALSE); // ★最後に最高品質で描き直すよう要求
     }
 
     g_isPenContact = false;
-    // 前回のスクリーン座標をリセット
-    g_lastScreenPoint = {-1, -1};
-    g_lastPressure = 0;
+    m_lastScreenPoint = {-1, -1};
+    m_lastPressure = 0;
 
     // OutputDebugStringW(L"--- WM_POINTERUP ---\n");
 
@@ -635,7 +436,7 @@ void MessageHandler::HandlePaint(WPARAM wParam, LPARAM lParam)
         backBufferGraphics.Clear(Color(255, 255, 255, 255));
 
         // 視点操作中なら、速度優先の最も軽い補間モードに設定
-        if (g_isTransforming)
+        if (m_isTransforming)
         {
             backBufferGraphics.SetInterpolationMode(InterpolationModeNearestNeighbor);
         }
@@ -645,14 +446,10 @@ void MessageHandler::HandlePaint(WPARAM wParam, LPARAM lParam)
             backBufferGraphics.SetInterpolationMode(InterpolationModeHighQualityBicubic);
         }
 
+        // ワールド座標からスクリーン座標への変換をViewManagerに任せる
         Matrix transformMatrix;
-        float centerX = g_nClientWidth / 2.0f;
-        float centerY = g_nClientHeight / 2.0f;
-        transformMatrix.Translate(centerX, centerY);
-        transformMatrix.Rotate(g_rotationAngle);
-        transformMatrix.Scale(g_zoomFactor, g_zoomFactor);
-        transformMatrix.Translate(-g_viewCenter.X, -g_viewCenter.Y);
-        backBufferGraphics.SetTransform(&transformMatrix);
+        m_viewManager.GetTransformMatrix(&transformMatrix); // ViewManagerから変換行列を取得
+        backBufferGraphics.SetTransform(&transformMatrix);  // バックバッファをスクリーン座標にする
 
         layer_manager.draw(&backBufferGraphics);
 
@@ -720,4 +517,92 @@ void MessageHandler::UpdateToolMode()
             SetCursor(LoadCursor(nullptr, IDC_ARROW));
         }
     }
+}
+
+LRESULT MessageHandler::ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+
+    // メニューをアプリケーション側で描画してくださいというメッセージが来たら(オーナードロー)
+    case WM_DRAWITEM:
+    {
+        return this->HandleDrawItem(wParam, lParam);
+        break;
+    }
+
+    // キーを離したときの処理
+    case WM_KEYUP:
+    {
+        this->HandleKeyUp(wParam, lParam);
+        break;
+    }
+
+    // ボタンやリスト
+    case WM_COMMAND:
+    {
+        this->HandleCommand(wParam, lParam);
+        break;
+    }
+
+    case WM_KEYDOWN:
+    {
+        g_pMessageHandler->HandleKeyDown(wParam, lParam);
+        break;
+    }
+
+    case WM_VSCROLL:
+    {
+        this->HandleVScroll(wParam, lParam);
+        break;
+    }
+    case WM_POINTERDOWN:
+    {
+        this->HandlePointerDown(wParam, lParam);
+        break;
+    }
+    case WM_POINTERUPDATE:
+    {
+        this->HandlePointerUpdate(wParam, lParam);
+
+        break;
+    }
+
+    case WM_POINTERUP:
+    {
+        this->HandlePointerUp(wParam, lParam);
+
+        break;
+    }
+
+    case WM_SIZE:
+    {
+
+        this->HandleSize(wParam, lParam);
+
+        break;
+    }
+
+    // ウィンドウが破棄されるときのメッセージ
+    case WM_DESTROY:
+    {
+        this->HandleDestroy(wParam, lParam);
+
+        break; // ウィンドウを描画する必要があるときのメッセージ
+    }
+
+    // ウインドウが再表示されたタイミング
+    case WM_PAINT:
+    {
+
+        this->HandlePaint(wParam, lParam);
+
+        break;
+    }
+
+    default:
+        // 自分で処理しないメッセージは、デフォルトの処理に任せる（非常に重要）
+        return DefWindowProc(m_hwnd, uMsg, wParam, lParam);
+    }
+    return 0;
 }

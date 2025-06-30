@@ -1,14 +1,21 @@
 #pragma once
 #include <windows.h>
 
+#include "view/ViewManager.h"
+
 class MessageHandler
 {
-public:
-    MessageHandler(HWND hwnd);
-    LRESULT ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 private:
     HWND m_hwnd;
+    ViewManager m_viewManager; // <<< ViewManagerのインスタンスを追加
+
+    // 操作中の一時的な状態
+    POINT m_operationStartPoint; // パン、ズーム、回転の開始点を記録
+    bool m_isTransforming;       // 何らかの視点操作中かどうかのフラグ
+
+    POINT m_lastScreenPoint; // 前回の点の座標
+    UINT32 m_lastPressure;   // 前回の点の筆圧
 
     // ハンドラ
     void HandleCreate();
@@ -26,4 +33,8 @@ private:
     void HandlePaint(WPARAM wParam, LPARAM lParam);
 
     void UpdateToolMode();
+
+public:
+    MessageHandler(HWND hwnd);
+    LRESULT ProcessMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

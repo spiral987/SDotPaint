@@ -35,25 +35,16 @@ extern int g_nClientHeight;
 // 視点移動用のグローバル変数
 extern bool g_isPanMode;     // 視点移動モードかどうかのフラグ
 extern POINT g_panLastPoint; // 視点移動時の最後のマウス位置
-extern PointF g_viewCenter;  // ワールド座標系でのビュー中心
 
 extern bool g_isRotateMode;   // 回転モードかどうかのフラグ
 extern float g_rotationAngle; // 現在の総回転角度
-extern float g_startAngle;    // 回転開始時の角度
 
-extern bool g_isZoomMode;        // ズームモードかどうかのフラグ
-extern float g_zoomFactor;       // 現在のズーム率
-extern float g_baseZoomFactor;   // ズーム開始時のズーム率
-extern POINT g_zoomStartPoint;   // ズーム開始時のスクリーン座標
-extern PointF g_zoomCenterWorld; // ズーム基点のワールド座標
+extern bool g_isZoomMode; // ズームモードかどうかのフラグ
 
 extern bool g_isPenContact; // ペンの接触状態を自前で管理するフラグ
-
-extern bool g_isTransforming; // 視点操作中かどうかのフラグ
 
 // マウスリーブイベントをトラックするためのフラグ
 extern bool g_bTrackingMouse;
 
-// グローバル変数に「前回のスクリーン座標」を保持する変数を追加
-extern POINT g_lastScreenPoint;
+// 最後の点の筆圧をほぞんする変数を追加
 extern UINT32 g_lastPressure;

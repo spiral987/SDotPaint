@@ -1,15 +1,11 @@
-#include "ui/UIManager.h"
-#include "core/LayerManager.h"
-#include "app/globals.h"
-
 #include <string>
 #include <windows.h>
 #include <CommCtrl.h>
 
-// レイヤーリストボックスのサブクラスプロシージャ（前方宣言）
-LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+#include "core/LayerManager.h"
+#include "app/globals.h"
+#include "ui/UIManager.h"
+#include "ui/UIHandlers.h"
 
 UIManager::UIManager(HWND hParent, LayerManager &layerManager)
     : m_hParent(hParent), m_layerManager(layerManager)
@@ -116,7 +112,7 @@ void UIManager::SetupLayerListSubclass()
     if (m_hLayerList && &m_layerManager)
     {
         // リストボックスのサブクラス化
-        SetWindowSubclass(m_hLayerList, LayerListProc, 0, (DWORD_PTR)&m_layerManager);
+        SetWindowSubclass(m_hLayerList, UIHandlers::LayerListProc, 0, (DWORD_PTR)&m_layerManager);
     }
 }
 
@@ -270,7 +266,7 @@ void UIManager::HandleCommand(WPARAM wParam)
                 SendMessage(hEdit, WM_SETFONT, SendMessage(m_hLayerList, WM_GETFONT, 0, 0), TRUE);
 
                 // エディットコントロールのプロシージャをサブクラス化
-                SetWindowSubclass(hEdit, EditControlProc, 0, (DWORD_PTR)&m_layerManager);
+                SetWindowSubclass(hEdit, UIHandlers::EditControlProc, 0, (DWORD_PTR)&m_layerManager);
 
                 // エディットコントロールにフォーカスを合わせ、テキストを全選択
                 SetFocus(hEdit);
