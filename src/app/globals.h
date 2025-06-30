@@ -32,19 +32,14 @@ extern Bitmap *g_pBackBuffer;
 extern int g_nClientWidth;
 extern int g_nClientHeight;
 
-// 視点移動用のグローバル変数
-extern bool g_isPanMode;     // 視点移動モードかどうかのフラグ
 extern POINT g_panLastPoint; // 視点移動時の最後のマウス位置
 
-extern bool g_isRotateMode;   // 回転モードかどうかのフラグ
 extern float g_rotationAngle; // 現在の総回転角度
-
-extern bool g_isZoomMode; // ズームモードかどうかのフラグ
-
-extern bool g_isPenContact; // ペンの接触状態を自前で管理するフラグ
 
 // マウスリーブイベントをトラックするためのフラグ
 extern bool g_bTrackingMouse;
 
 // 最後の点の筆圧をほぞんする変数を追加
 extern UINT32 g_lastPressure;
+
+extern bool g_isPenContact;

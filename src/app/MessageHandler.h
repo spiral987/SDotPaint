@@ -1,7 +1,10 @@
 #pragma once
 #include <windows.h>
+#include <memory>
 
 #include "view/ViewManager.h"
+#include "ui/UIManager.h"
+#include "tools/ToolController.h"
 
 class MessageHandler
 {
@@ -9,6 +12,7 @@ class MessageHandler
 private:
     HWND m_hwnd;
     ViewManager m_viewManager; // <<< ViewManagerのインスタンスを追加
+    std::unique_ptr<ToolController> m_toolController;
 
     // 操作中の一時的な状態
     POINT m_operationStartPoint; // パン、ズーム、回転の開始点を記録

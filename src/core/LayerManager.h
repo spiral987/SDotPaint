@@ -18,13 +18,13 @@ namespace Gdiplus
 class LayerManager
 {
 private:
-    std::vector<std::unique_ptr<ILayer>> layers_; // レイヤーを保持
-    int activeLayerIndex_ = -1;                   // 現在アクティブなレイヤーを保持
-    DrawMode currentMode_ = DrawMode::Pen;        // モードを保持
-    int penWidth_ = 5;                            // ペンの太さ
-    int eraserWidth_ = 20;                        // 消しゴムの太さ
-    COLORREF penColor_ = RGB(0, 0, 0);            // ペンの色
-    int hoveredLayerIndex_ = -1;                  // ホバー中のレイヤーのインデックス
+    std::vector<std::unique_ptr<ILayer>> m_layers; // レイヤーを保持
+    int activeLayerIndex_ = -1;                    // 現在アクティブなレイヤーを保持
+    DrawMode currentMode_ = DrawMode::Pen;         // モードを保持
+    int penWidth_ = 5;                             // ペンの太さ
+    int eraserWidth_ = 20;                         // 消しゴムの太さ
+    COLORREF penColor_ = RGB(0, 0, 0);             // ペンの色
+    int hoveredLayerIndex_ = -1;                   // ホバー中のレイヤーのインデックス
 
 public:
     LayerManager(); // コンストラクタ
@@ -49,6 +49,7 @@ public:
     void setPenColor(COLORREF color);
     void setActiveLayer(int index);
     void setHoveredLayer(int index);
+    void setCurrentMode(DrawMode mode);
 
     // getter
     ILayer *getActiveLayer() const; //  現在アクティブなレイヤーを取得
@@ -59,4 +60,6 @@ public:
     const std::vector<std::unique_ptr<ILayer>> &getLayers() const; // レイヤー配列を返す
     int getActiveLayerIndex() const;
     int getHoveredLayerIndex() const;
+    int getCanvasWidth() const;
+    int getCanvasHeight() const;
 };

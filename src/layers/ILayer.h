@@ -31,4 +31,6 @@ public:
 
     virtual COLORREF getAverageColor() const = 0;                             // レイヤーの平均色を取得
     virtual const std::vector<std::vector<PenPoint>> &getStrokes() const = 0; // 点のリストを取得する関数(テスト用)
+    virtual int getWidth() const = 0;
+    virtual int getHeight() const = 0;
 };

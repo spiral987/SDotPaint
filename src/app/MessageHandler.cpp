@@ -1,6 +1,7 @@
 #include <windows.h>
+#include <gdiplus.h>
 
-#include "globals.h"
+#include "app/globals.h"
 #include "MessageHandler.h"
 #include "core/LayerManager.h"
 #include "ui/UIManager.h"
@@ -26,6 +27,8 @@ void MessageHandler::HandleCreate()
 
     m_viewManager.UpdateClientSize(g_nClientWidth, g_nClientHeight);
 
+    m_viewManager.ResetView(); // ビューをリセットして中心に
+
     // ダブルバッファリング用のビットマップを作成
     g_pBackBuffer = new Bitmap(g_nClientWidth, g_nClientHeight, PixelFormat32bppARGB);
 
@@ -33,6 +36,7 @@ void MessageHandler::HandleCreate()
     layer_manager.createNewRasterLayer(g_nClientWidth, g_nClientHeight, L"レイヤー1");
 
     // UIManagerを作成してUI処理をする
+    m_toolController = std::make_unique<ToolController>(m_hwnd, m_viewManager, layer_manager); // TODO グローバルでも動く？
     g_pUIManager = std::make_unique<UIManager>(m_hwnd, layer_manager);
     g_pUIManager->CreateControls();
     g_pUIManager->SetupLayerListSubclass();
@@ -54,34 +58,21 @@ void MessageHandler::HandleKeyUp(WPARAM wParam, LPARAM lParam)
 void MessageHandler::HandleKeyDown(WPARAM wParam, LPARAM lParam)
 {
     // キーが押されたら、まずモードを更新する
-    if (wParam == VK_CONTROL || wParam == VK_SPACE || wParam == 'R')
-    {
-        UpdateToolMode();
-        return; // モード変更キーの場合は、他の処理をしない
-    }
+    UpdateToolMode();
 
     switch (wParam)
     {
     case 'E': // 消しゴム
     {
-        SetFocus(m_hwnd);
-        layer_manager.setDrawMode(DrawMode::Eraser);
-        { // 変数スコープを明確にするための括弧
-            int width = layer_manager.getCurrentToolWidth();
-            g_pUIManager->SetSliderValue(width);
-            g_pUIManager->UpdateStaticValue(width);
-        }
+        // 消しゴムキーが押されたら、LayerManagerのモードを変更し、ツールを更新する
+        layer_manager.setCurrentMode(DrawMode::Eraser);
+        UpdateToolMode();
         break;
     }
     case 'Q': // ペン
     {
-        SetFocus(m_hwnd);
-        layer_manager.setDrawMode(DrawMode::Pen);
-        {
-            int width = layer_manager.getCurrentToolWidth();
-            g_pUIManager->SetSliderValue(width);
-            g_pUIManager->UpdateStaticValue(width);
-        }
+        layer_manager.setCurrentMode(DrawMode::Pen);
+        UpdateToolMode();
         break;
     }
     case 'C': // 色選択(Color)
@@ -173,223 +164,73 @@ void MessageHandler::HandlePointerDown(WPARAM wParam, LPARAM lParam)
     g_isPenContact = true;
     SetFocus(m_hwnd);
 
-    POINTER_INFO pointerInfo;
+    POINTER_PEN_INFO penInfo;
     UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-    if (!GetPointerInfo(pointerId, &pointerInfo))
+    if (!GetPointerPenInfo(pointerId, &penInfo))
     {
         return;
     }
 
-    POINT currentPoint = pointerInfo.ptPixelLocation;
-    ScreenToClient(m_hwnd, &currentPoint);
+    // イベントを設定
+    PointerEvent event;
+    event.hwnd = m_hwnd;
+    event.screenPos = penInfo.pointerInfo.ptPixelLocation;
+    ScreenToClient(m_hwnd, &event.screenPos);
+    event.pressure = penInfo.pressure;
 
-    // 視点操作モード（パン、ズーム、回転）の場合
-    if (g_isPanMode || g_isRotateMode || g_isZoomMode)
-    {
-        m_isTransforming = true;
-        m_operationStartPoint = currentPoint;
-        if (g_isPanMode)
-        {
-            m_viewManager.PanStart(currentPoint);
-        }
-        if (g_isRotateMode)
-        {
-            m_viewManager.RotateStart();
-        }
-        if (g_isZoomMode)
-        {
-            m_viewManager.ZoomStart();
-        }
-        // RotateStart, ZoomStartは空なので呼ばなくてもOK
-        SetCapture(m_hwnd);
-        return;
-    }
-
-    else
-    {
-        // 右ボタンがクリックされた場合はクリア処理
-        if (IS_POINTER_SECONDBUTTON_WPARAM(wParam))
-        {
-            layer_manager.clear();
-            InvalidateRect(m_hwnd, nullptr, TRUE); // 背景を白でクリア
-            return;
-        }
-
-        layer_manager.startNewStroke();
-
-        POINTER_PEN_INFO penInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
-        {
-            POINT p = penInfo.pointerInfo.ptPixelLocation;
-            ScreenToClient(m_hwnd, &p);
-            UINT32 pressure = penInfo.pressure;
-
-            // ワールド座標への変換をViewManagerに任せる
-            PointF worldPoint = m_viewManager.ScreenToWorld(p);
-            layer_manager.addPoint({(LONG)worldPoint.X, (LONG)worldPoint.Y, pressure});
-
-            // 最初の点の筆圧を保存
-            m_lastScreenPoint = p;
-            g_lastPressure = pressure;
-        }
-        return;
-    }
+    m_toolController->OnPointerDown(event);
 }
 
 void MessageHandler::HandlePointerUpdate(WPARAM wParam, LPARAM lParam)
 {
     // ペンがキャンバスに接触していない場合は何もしない
     if (!g_isPenContact)
+    {
         return;
-
-    // 視点移動処理
-    if (m_isTransforming)
-    {
-        POINTER_INFO pointerInfo;
-        UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-        if (!GetPointerInfo(pointerId, &pointerInfo))
-            return;
-
-        POINT currentPoint = pointerInfo.ptPixelLocation;
-        ScreenToClient(m_hwnd, &currentPoint);
-
-        // 各モードに応じてViewManagerのメソッドを呼び出すだけ！
-        if (g_isPanMode)
-        {
-            m_viewManager.PanUpdate(currentPoint);
-        }
-        else if (g_isRotateMode)
-        {
-            // 回転は開始点からの差分で計算するので、開始点も渡す
-            m_viewManager.RotateUpdate(currentPoint, m_operationStartPoint);
-        }
-        else if (g_isZoomMode)
-        {
-            // ズームも開始点からの差分で計算する
-            m_viewManager.ZoomUpdate(currentPoint, m_operationStartPoint);
-        }
-
-        // 変更を画面に反映させる
-        InvalidateRect(m_hwnd, NULL, FALSE);
-        return; // 視点操作中は描画処理を行わない
     }
-    else
+
+    // イベント情報の構築 (この部分は変更なし)
+    POINTER_PEN_INFO penInfo;
+    UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+    if (!GetPointerPenInfo(pointerId, &penInfo))
     {
-        // 描画処理
-
-        if (IS_POINTER_INCONTACT_WPARAM(wParam))
-        {
-            POINTER_PEN_INFO penInfo;
-            UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
-            if (GetPointerPenInfo(pointerId, &penInfo) && penInfo.pointerInfo.pointerType == PT_PEN)
-            {
-                POINT p = penInfo.pointerInfo.ptPixelLocation;
-                ScreenToClient(m_hwnd, &p);
-                UINT32 pressure = penInfo.pressure;
-
-                // 1. ワールド座標に変換し、レイヤーのデータに記録（永続化のため）
-                // ワールド座標への変換をViewManagerに任せる
-                PointF worldPoint = m_viewManager.ScreenToWorld(p);
-                layer_manager.addPoint({(LONG)worldPoint.X, (LONG)worldPoint.Y, pressure});
-
-                // 2. 画面に直接、"アンチエイリアスのかかった"軽量な線を描画する
-                HDC hdc = GetDC(m_hwnd);
-                if (hdc)
-                {
-                    Graphics screenGraphics(hdc);
-                    screenGraphics.SetSmoothingMode(SmoothingModeAntiAlias);
-
-                    // プレビュー描画にも、完全な変換行列を適用する
-                    Matrix transformMatrix;
-                    m_viewManager.GetTransformMatrix(&transformMatrix);
-                    screenGraphics.SetTransform(&transformMatrix);
-
-                    int maxToolWidth = layer_manager.getCurrentToolWidth();
-                    COLORREF toolColorRef = layer_manager.getPenColor();
-                    if (layer_manager.getCurrentMode() == DrawMode::Eraser)
-                    {
-                        toolColorRef = RGB(255, 255, 255);
-                    }
-
-                    // RasterLayer同様、平均筆圧で太さを計算
-                    float currentPressureFactor = (float)pressure / 1024.0f;
-                    float lastPressureFactor = (float)g_lastPressure / 1024.0f;
-                    float averagePressureFactor = (currentPressureFactor + lastPressureFactor) / 2.0f;
-                    float pressureWidth = maxToolWidth * averagePressureFactor;
-
-                    // 変換行列で既にズームが適用されているので、プレビュー幅でズームを掛ける必要はなくなる
-                    float previewWidth = pressureWidth;
-                    if (previewWidth < 1.0f / m_viewManager.GetZoomFactor())
-                    {
-                        // どんなに細くても最低1ピクセルは表示されるように調整
-                        previewWidth = 1.0f / m_viewManager.GetZoomFactor();
-                    }
-
-                    Color penColor(GetRValue(toolColorRef), GetGValue(toolColorRef), GetBValue(toolColorRef));
-                    Pen gdiplusPen(penColor, previewWidth);
-
-                    // RasterLayerの設定と完全に一致させる
-                    gdiplusPen.SetStartCap(LineCapRound);
-                    gdiplusPen.SetEndCap(LineCapRound);
-                    gdiplusPen.SetLineJoin(LineJoinRound); // 角を滑らかにする設定を追加
-
-                    if (m_lastScreenPoint.x != -1)
-                    {
-                        // 描画する座標も、ワールド座標に変換したものを使う
-                        PointF lastWorldPoint = m_viewManager.ScreenToWorld(m_lastScreenPoint);
-                        screenGraphics.DrawLine(&gdiplusPen, lastWorldPoint, worldPoint);
-                    }
-
-                    ReleaseDC(m_hwnd, hdc);
-                }
-
-                // 現在の情報を「直前の情報」として更新
-                m_lastScreenPoint = p;
-                m_lastPressure = pressure;
-            }
-        }
+        return;
     }
+
+    PointerEvent event;
+    event.hwnd = m_hwnd;
+    event.screenPos = penInfo.pointerInfo.ptPixelLocation;
+    ScreenToClient(m_hwnd, &event.screenPos);
+    event.pressure = penInfo.pressure;
+
+    m_toolController->OnPointerUpdate(event);
 }
 
 void MessageHandler::HandlePointerUp(WPARAM wParam, LPARAM lParam)
 {
-    if (m_isTransforming)
-    {
-        m_isTransforming = false;            // ★操作終了
-        InvalidateRect(m_hwnd, NULL, FALSE); // ★最後に最高品質で描き直すよう要求
-    }
 
     g_isPenContact = false;
-    m_lastScreenPoint = {-1, -1};
-    m_lastPressure = 0;
 
-    // OutputDebugStringW(L"--- WM_POINTERUP ---\n");
+    // イベント情報の構築 (この部分は変更なし)
+    POINTER_PEN_INFO penInfo;
+    UINT32 pointerId = GET_POINTERID_WPARAM(wParam);
+    if (!GetPointerPenInfo(pointerId, &penInfo))
+    {
+        return;
+    }
 
-    if (g_isRotateMode)
-    {
-        // 何もしない
-    }
-    //  視点移動モード中の処理
-    else if (g_isPanMode)
-    {
-        ReleaseCapture(); // マウスキャプチャを解放
-    }
-    else if (g_isZoomMode)
-    {
-        // 何もしない
-    }
-    else
-    {
-        // ペンが離れたら、現在のストロークを終了する
-        layer_manager.startNewStroke();
-        // 【重要】ペンを離したときに、最終的な正しい絵を再描画する
-        InvalidateRect(m_hwnd, NULL, FALSE);
+    PointerEvent event;
+    event.hwnd = m_hwnd;
+    event.screenPos = penInfo.pointerInfo.ptPixelLocation;
+    ScreenToClient(m_hwnd, &event.screenPos);
+    event.pressure = penInfo.pressure;
 
-        if (g_pUIManager)
-        {
-            InvalidateRect(g_pUIManager->GetLayerListHandle(), NULL, FALSE);
-        }
+    m_toolController->OnPointerUp(event);
+
+    // レイヤーウインドウを再描画して背景色を適用
+    if (g_pUIManager)
+    {
+        g_pUIManager->UpdateLayerList();
     }
 }
 
@@ -432,6 +273,8 @@ void MessageHandler::HandlePaint(WPARAM wParam, LPARAM lParam)
         // 1. バックバッファのGraphicsオブジェクトを取得
         Graphics backBufferGraphics(g_pBackBuffer);
 
+        Color grayColor(255, 192, 192, 192); // 灰色でクリアしておく
+
         // 2. 描画を始める前に、バックバッファ全体を白でクリアする
         backBufferGraphics.Clear(Color(255, 255, 255, 255));
 
@@ -451,6 +294,15 @@ void MessageHandler::HandlePaint(WPARAM wParam, LPARAM lParam)
         m_viewManager.GetTransformMatrix(&transformMatrix); // ViewManagerから変換行列を取得
         backBufferGraphics.SetTransform(&transformMatrix);  // バックバッファをスクリーン座標にする
 
+        // 描画可能領域を白くする
+        SolidBrush whiteBrush(Color(255, 255, 255, 255));
+        RectF canvasRect(
+            0.0f,
+            0.0f,
+            static_cast<float>(layer_manager.getCanvasWidth()),
+            static_cast<float>(layer_manager.getCanvasHeight()));
+        backBufferGraphics.FillRectangle(&whiteBrush, canvasRect);
+
         layer_manager.draw(&backBufferGraphics);
 
         // 3. 【最適化の鍵】完成したバックバッファから、「無効化された領域(ps.rcPaint)だけ」を画面にコピー
@@ -468,54 +320,43 @@ void MessageHandler::HandlePaint(WPARAM wParam, LPARAM lParam)
 // モード管理をする関数
 void MessageHandler::UpdateToolMode()
 {
-    // 現在の各キーの押下状態を取得
-    bool isCtrlDown = GetKeyState(VK_CONTROL) < 0;
-    bool isSpaceDown = GetKeyState(VK_SPACE) < 0;
-    bool isRDown = GetKeyState('R') < 0;
+    // キーの状態を取得 (変更なし)
+    bool isSpaceDown = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
+    bool isCtrlDown = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+    bool isRDown = (GetAsyncKeyState('R') & 0x8000) != 0;
 
-    // 1. ズームモード (Ctrl + Space) を最優先で判定
+    // Zg_isPanModeなどのフラグを操作する代わりに、ToolControllerにツール設定を依頼する
     if (isCtrlDown && isSpaceDown)
     {
-        if (!g_isZoomMode)
-        {
-            g_isZoomMode = true;
-            g_isPanMode = false;
-            g_isRotateMode = false;
-            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
-        }
+        m_toolController->SetTool(ToolType::Zoom);
     }
-    // 2. パンモード (Space単体) を次に判定
     else if (isSpaceDown)
     {
-        if (!g_isPanMode)
-        {
-            g_isPanMode = true;
-            g_isZoomMode = false;
-            g_isRotateMode = false;
-            SetCursor(LoadCursor(nullptr, IDC_HAND));
-        }
+        m_toolController->SetTool(ToolType::Pan);
     }
-    // 3. 回転モード (R単体) を次に判定
     else if (isRDown)
     {
-        if (!g_isRotateMode)
-        {
-            g_isRotateMode = true;
-            g_isPanMode = false;
-            g_isZoomMode = false;
-            SetCursor(LoadCursor(nullptr, IDC_CROSS));
-        }
+        m_toolController->SetTool(ToolType::Rotate);
     }
-    // 4. 上記のいずれでもなければ、全ての視点操作モードを解除
     else
     {
-        if (g_isZoomMode || g_isPanMode || g_isRotateMode)
+        // デフォルトツール（ペンか消しゴム）に戻す
+        // LayerManagerが知っている現在の描画モードに基づいてツールを設定
+        if (layer_manager.getCurrentMode() == DrawMode::Pen)
         {
-            g_isZoomMode = false;
-            g_isPanMode = false;
-            g_isRotateMode = false;
-            SetCursor(LoadCursor(nullptr, IDC_ARROW));
+            m_toolController->SetTool(ToolType::Pen);
         }
+        else
+        {
+            m_toolController->SetTool(ToolType::Eraser);
+        }
+    }
+
+    if (g_pUIManager) // UIManagerが有効な場合のみ
+    {
+        int currentWidth = layer_manager.getCurrentToolWidth();
+        g_pUIManager->SetSliderValue(currentWidth);
+        g_pUIManager->UpdateStaticValue(currentWidth);
     }
 }
 

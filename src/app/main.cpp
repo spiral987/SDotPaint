@@ -30,36 +30,21 @@ Bitmap *g_pBackBuffer = nullptr;
 int g_nClientWidth = 0;
 int g_nClientHeight = 0;
 
-// 視点移動用のグローバル変数
-bool g_isPanMode = false;           // 視点移動モードかどうかのフラグ
-POINT g_panLastPoint = {0, 0};      // 視点移動時の最後のマウス位置
-PointF g_viewCenter = {0.0f, 0.0f}; // ワールド座標系でのビュー中心
-//  POINT g_viewOffset = {0, 0};   // 視点のオフセット量
+POINT g_panLastPoint = {0, 0}; // 視点移動時の最後のマウス位置
 
-bool g_isRotateMode = false;  // 回転モードかどうかのフラグ
 float g_rotationAngle = 0.0f; // 現在の総回転角度
-float g_startAngle = 0.0f;    // 回転開始時の角度
-
-bool g_isZoomMode = false;               // ズームモードかどうかのフラグ
-float g_zoomFactor = 1.0f;               // 現在のズーム率
-float g_baseZoomFactor = 1.0f;           // ズーム開始時のズーム率
-POINT g_zoomStartPoint = {0, 0};         // ズーム開始時のスクリーン座標
-PointF g_zoomCenterWorld = {0.0f, 0.0f}; // ズーム基点のワールド座標
-
-bool g_isPenContact = false; // ペンの接触状態を自前で管理するフラグ
-
-bool g_isTransforming = false; // 視点操作中かどうかのフラグ
 
 // マウスリーブイベントをトラックするためのフラグ
 bool g_bTrackingMouse = false;
 
-// グローバル変数に「前回のスクリーン座標」を保持する変数を追加
-POINT g_lastScreenPoint = {-1, -1};
 UINT32 g_lastPressure = 0;
+
+bool g_isPenContact = false;
 
 // ウィンドウプロシージャのプロトタイプ宣言
 // この関数がウィンドウへの様々なメッセージ（イベント）を処理
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK
+WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 // main関数の代わりに使用されるWinMain関数
 int WINAPI WinMain(
