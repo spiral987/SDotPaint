@@ -221,3 +221,13 @@ const std::vector<std::vector<PenPoint>> &RasterLayer::getStrokes() const
     static const std::vector<std::vector<PenPoint>> empty_strokes;
     return empty_strokes;
 }
+
+int RasterLayer::getWidth() const
+{
+    return width_;
+}
+
+int RasterLayer::getHeight() const
+{
+    return height_;
+}

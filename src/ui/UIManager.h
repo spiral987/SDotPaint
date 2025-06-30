@@ -2,11 +2,6 @@
 #include <windows.h>
 #include <CommCtrl.h>
 
-// UIコントロールのIDを定義
-#define ID_ADD_LAYER_BUTTON 1001
-#define ID_DELETE_LAYER_BUTTON 1002
-#define ID_LAYER_LISTBOX 1003
-
 class LayerManager;
 // ボタンやリストのUIを設定する
 class UIManager
@@ -24,6 +19,8 @@ public:
 
     // レイヤーリストを更新する
     void UpdateLayerList();
+
+    BOOL HandleDrawItem(WPARAM wParam, LPARAM lParam);
 
     // スライダーの値を取得する
     int GetSliderValue() const;
@@ -61,4 +58,7 @@ private:
     HWND m_hLayerList = nullptr;   // レイヤーリストボックス
     HWND m_hAddButton = nullptr;   // 追加ボタン
     HWND m_hDelButton = nullptr;   // 削除ボタン
+
+    // 背景色に応じてテキスト色を決定する関数
+    COLORREF GetContrastingTextColor(COLORREF bgColor) const;
 };

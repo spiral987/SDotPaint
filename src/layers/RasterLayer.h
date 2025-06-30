@@ -39,4 +39,6 @@ public:
 
     COLORREF getAverageColor() const override;                             // 平均色を返す
     const std::vector<std::vector<PenPoint>> &getStrokes() const override; // ダミー
+    int getWidth() const override;
+    int getHeight() const override;
 };

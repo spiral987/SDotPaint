@@ -1,14 +1,11 @@
-#include "ui/UIManager.h"
-#include "core/LayerManager.h"
-
 #include <string>
 #include <windows.h>
 #include <CommCtrl.h>
 
-// レイヤーリストボックスのサブクラスプロシージャ（前方宣言）
-LRESULT CALLBACK LayerListProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-
-LRESULT CALLBACK EditControlProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+#include "core/LayerManager.h"
+#include "app/globals.h"
+#include "ui/UIManager.h"
+#include "ui/UIHandlers.h"
 
 UIManager::UIManager(HWND hParent, LayerManager &layerManager)
     : m_hParent(hParent), m_layerManager(layerManager)
@@ -115,7 +112,7 @@ void UIManager::SetupLayerListSubclass()
     if (m_hLayerList && &m_layerManager)
     {
         // リストボックスのサブクラス化
-        SetWindowSubclass(m_hLayerList, LayerListProc, 0, (DWORD_PTR)&m_layerManager);
+        SetWindowSubclass(m_hLayerList, UIHandlers::LayerListProc, 0, (DWORD_PTR)&m_layerManager);
     }
 }
 
@@ -137,6 +134,49 @@ void UIManager::UpdateLayerList()
 
     // ウィンドウ全体を再描画
     InvalidateRect(m_hParent, nullptr, FALSE);
+}
+
+BOOL UIManager::HandleDrawItem(WPARAM wParam, LPARAM lParam)
+{
+    // このメッセージがレイヤーリストボックスからのものか確認
+    if ((UINT)wParam == ID_LAYER_LISTBOX)
+    {
+        DRAWITEMSTRUCT *pdis = (DRAWITEMSTRUCT *)lParam;
+
+        // 描画対象の項目がない場合（リストが空など）は何もしない
+        if (pdis->itemID == -1)
+        {
+            return TRUE;
+        }
+
+        // 1. 描画対象のレイヤーを取得
+        const auto &layers = layer_manager.getLayers();
+        const auto &layer = layers[pdis->itemID];
+
+        // 2. レイヤーの平均色を取得
+        COLORREF bgColor = layer->getAverageColor();
+
+        // 3. 背景色から、見やすいテキスト色を決定
+        COLORREF textColor = g_pUIManager->GetContrastingTextColor(bgColor);
+
+        // 4. 背景を描画
+        HBRUSH hBrush = CreateSolidBrush(bgColor);
+        FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+        DeleteObject(hBrush);
+
+        // 5. テキスト（レイヤー名）を描画
+        SetTextColor(pdis->hDC, textColor);
+        SetBkMode(pdis->hDC, TRANSPARENT); // テキストの背景を透明にする
+        DrawTextW(pdis->hDC, layer->getName().c_str(), -1, &pdis->rcItem, DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+
+        // 6. 項目が選択されている場合は、フォーカス用の点線の四角形を描画
+        if (pdis->itemState & ODS_SELECTED)
+        {
+            DrawFocusRect(pdis->hDC, &pdis->rcItem);
+        }
+
+        return TRUE; // メッセージを処理したことを示す
+    }
 }
 
 int UIManager::GetSliderValue() const
@@ -226,7 +266,7 @@ void UIManager::HandleCommand(WPARAM wParam)
                 SendMessage(hEdit, WM_SETFONT, SendMessage(m_hLayerList, WM_GETFONT, 0, 0), TRUE);
 
                 // エディットコントロールのプロシージャをサブクラス化
-                SetWindowSubclass(hEdit, EditControlProc, 0, (DWORD_PTR)&m_layerManager);
+                SetWindowSubclass(hEdit, UIHandlers::EditControlProc, 0, (DWORD_PTR)&m_layerManager);
 
                 // エディットコントロールにフォーカスを合わせ、テキストを全選択
                 SetFocus(hEdit);
@@ -298,5 +338,25 @@ void UIManager::ResizeControls(int parentWidth, int parentHeight)
         int staticY = PADDING * 2 + BUTTON_HEIGHT;
 
         MoveWindow(m_hStaticValue, staticX, staticY, STATIC_TEXT_WIDTH, 20, TRUE);
+    }
+}
+
+COLORREF UIManager::GetContrastingTextColor(COLORREF bgColor) const
+{
+    BYTE r = GetRValue(bgColor);
+    BYTE g = GetGValue(bgColor);
+    BYTE b = GetBValue(bgColor);
+
+    // YUV色空間の輝度Yを計算
+    double y = 0.299 * r + 0.587 * g + 0.114 * b;
+
+    // 輝度が128より大きい（明るい）場合は黒、そうでなければ白を返す
+    if (y > 128)
+    {
+        return RGB(0, 0, 0);
+    }
+    else
+    {
+        return RGB(255, 255, 255);
     }
 }

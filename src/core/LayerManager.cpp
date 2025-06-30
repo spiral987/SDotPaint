@@ -9,22 +9,22 @@ LayerManager::LayerManager()
 LayerManager::LayerManager(std::unique_ptr<ILayer> testLayer)
 
 {
-    layers_.push_back(std::move(testLayer));
+    m_layers.push_back(std::move(testLayer));
     activeLayerIndex_ = 0;
 }
 
 // レイヤー作成時に名前を渡す
 void LayerManager::createNewRasterLayer(int width, int height, std::wstring name)
 {
-    layers_.push_back(std::make_unique<RasterLayer>(width, height, name));
-    activeLayerIndex_ = (int)layers_.size() - 1;
+    m_layers.push_back(std::make_unique<RasterLayer>(width, height, name));
+    activeLayerIndex_ = (int)m_layers.size() - 1;
 }
 
 // 新しいラスターレイヤーを追加する
 void LayerManager::addNewRasterLayer(int width, int height)
 {
     // 「レイヤーN」形式で名前を生成
-    std::wstring layerName = L"レイヤー" + std::to_wstring(layers_.size() + 1);
+    std::wstring layerName = L"レイヤー" + std::to_wstring(m_layers.size() + 1);
     createNewRasterLayer(width, height, layerName);
 }
 
@@ -32,25 +32,25 @@ void LayerManager::addNewRasterLayer(int width, int height)
 void LayerManager::deleteActiveLayer()
 {
     // レイヤーが1つしかない場合は削除しない
-    if (layers_.size() <= 1 || activeLayerIndex_ < 0)
+    if (m_layers.size() <= 1 || activeLayerIndex_ < 0)
     {
         return;
     }
 
-    layers_.erase(layers_.begin() + activeLayerIndex_);
+    m_layers.erase(m_layers.begin() + activeLayerIndex_);
 
     // アクティブなインデックスを調整
-    if (activeLayerIndex_ >= layers_.size())
+    if (activeLayerIndex_ >= m_layers.size())
     {
-        activeLayerIndex_ = (int)layers_.size() - 1;
+        activeLayerIndex_ = (int)m_layers.size() - 1;
     }
 }
 
 void LayerManager::renameLayer(int index, const std::wstring &newName)
 {
-    if (index >= 0 && index < layers_.size())
+    if (index >= 0 && index < m_layers.size())
     {
-        layers_[index]->setName(newName);
+        m_layers[index]->setName(newName);
     }
 }
 
@@ -59,9 +59,9 @@ void LayerManager::draw(Gdiplus::Graphics *g) const
 {
     // すべてのレイヤーを描画する
     // ホバー状態に応じて不透明度を変えて描画
-    for (int i = 0; i < layers_.size(); ++i)
+    for (int i = 0; i < m_layers.size(); ++i)
     {
-        if (layers_[i])
+        if (m_layers[i])
         {
             float opacity = 1.0f;
 
@@ -71,7 +71,7 @@ void LayerManager::draw(Gdiplus::Graphics *g) const
                 opacity = 0.05f; // 5%の不透明度
             }
 
-            layers_[i]->draw(g, opacity);
+            m_layers[i]->draw(g, opacity);
         }
     }
 }
@@ -130,7 +130,7 @@ void LayerManager::setPenColor(COLORREF color)
 
 void LayerManager::setActiveLayer(int index)
 {
-    if (index >= 0 && index < layers_.size())
+    if (index >= 0 && index < m_layers.size())
     {
         activeLayerIndex_ = index;
     }
@@ -146,13 +146,18 @@ void LayerManager::setHoveredLayer(int index)
     }
 }
 
+void LayerManager::setCurrentMode(DrawMode mode)
+{
+    currentMode_ = mode;
+}
+
 // getter
 
 ILayer *LayerManager::getActiveLayer() const
 {
-    if (activeLayerIndex_ >= 0 && activeLayerIndex_ < layers_.size())
+    if (activeLayerIndex_ >= 0 && activeLayerIndex_ < m_layers.size())
     {
-        return layers_[activeLayerIndex_].get();
+        return m_layers[activeLayerIndex_].get();
     }
     return nullptr;
 }
@@ -181,7 +186,7 @@ int LayerManager::getCurrentToolWidth() const
 
 const std::vector<std::unique_ptr<ILayer>> &LayerManager::getLayers() const
 {
-    return layers_;
+    return m_layers;
 }
 
 int LayerManager::getActiveLayerIndex() const
@@ -192,4 +197,24 @@ int LayerManager::getActiveLayerIndex() const
 int LayerManager::getHoveredLayerIndex() const
 {
     return hoveredLayerIndex_;
+}
+
+int LayerManager::getCanvasWidth() const
+{
+    if (m_layers.empty())
+    {
+        return 0;
+    }
+    // 最初のレイヤーの幅をキャンバスの幅とする
+    return m_layers[0]->getWidth();
+}
+
+int LayerManager::getCanvasHeight() const
+{
+    if (m_layers.empty())
+    {
+        return 0;
+    }
+    // 最初のレイヤーの高さをキャンバスの高さとする
+    return m_layers[0]->getHeight();
 }
