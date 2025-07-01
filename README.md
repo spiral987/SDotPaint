@@ -6,4 +6,4 @@
 * 実行時に警告が出ますが、ウイルスじゃないので無視してかまいません。
 * OSはWindows想定です。
 ## リンク
-[Download for Windows](https://github.com/spiral987/SDotPaint/releases/download/v1.0/SDotPaint.exe)
+[Download for Windows](https://github.com/spiral987/SDotPaint/releases/download/v1.0.0/SDotPaint.exe)
