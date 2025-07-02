@@ -13,9 +13,7 @@ on:
       - main
       - develop
 
-# ワークフローに与える権限を設定
-permissions:
-  contents: write
+
 
 # 実行するジョブを定義
 jobs:
@@ -57,6 +55,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     # Windowsの最新環境で実行
     runs-on: windows-latest
+    # ワークフローに与える権限を設定
+    permissions:
+        contents: write
     steps:
       # 1. リポジトリのコードをチェックアウト
       - name: Checkout repository
@@ -76,7 +77,7 @@ jobs:
       # 4. バージョン番号からタグを生成
       - name: Generate Tag
         id: tag_generator
-        run: echo "tag=v$(Get-Content -Path CMakeLists.txt | Select-String -Pattern 'project\(SDotPaint VERSION ([\d\.]+)\)' | ForEach-Object { $_.Matches[0].Groups[1].Value })" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
+        run: echo "tag=v$(Get-Content -Path CMakeLists.txt | Select-String -Pattern 'project\(SDotPaint VERSION ([\d\.]+).*?\)\)' | ForEach-Object { $_.Matches[0].Groups[1].Value })" >> $env:GITHUB_OUTPUT
         shell: pwsh
 
       # 5. GitHubリリースを作成
