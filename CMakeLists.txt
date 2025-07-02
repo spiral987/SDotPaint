@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 # プロジェクトの名前と使用言語を定義
-project(SDotPaint VERSION 1.0 LANGUAGES CXX)
+project(SDotPaint VERSION 1.0.0 LANGUAGES CXX)
 
 # C++の言語標準を指定
 set(CMAKE_CXX_STANDARD 17)
