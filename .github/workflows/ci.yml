@@ -32,21 +32,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-googletest-
 
-      # 4. cppcheckのインストール
-      - name: Install cppcheck
-        run: choco install cppcheck -y --force
-        shell: pwsh
-
-      # 5. CMakeの設定 (デバッグビルド)
+      # 3. CMakeの設定 (デバッグビルド)
       - name: Configure CMake (Debug)
         run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      # 6. プロジェクトのビルド
+      # 4. プロジェクトのビルド
       - name: Build project
         run: cmake --build build --config Debug
 
 
-      # 8. テストの実行
+      # 5. テストの実行
       - name: Run tests
         run: ctest --test-dir build -C Debug
 
