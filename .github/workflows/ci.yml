@@ -13,6 +13,10 @@ on:
       - main
       - develop
 
+# ワークフローに与える権限を設定
+permissions:
+  contents: write
+
 # 実行するジョブを定義
 jobs:
   build-and-test:
@@ -57,7 +61,10 @@ jobs:
       # 1. リポジトリのコードをチェックアウト
       - name: Checkout repository
         uses: actions/checkout@v4
-
+        with:
+          # 全ての履歴をチェックアウトしてタグ生成を確実にする
+          fetch-depth: 0
+          
       # 2. CMakeの設定 (リリースビルド)
       - name: Configure CMake (Release)
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
