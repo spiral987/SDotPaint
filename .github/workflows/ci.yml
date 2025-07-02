@@ -1,19 +1,21 @@
 # ワークフローの名前
-name: C++ CI
+name: C++ CI/CD with Release
 
 # このワークフローが実行されるタイミングを定義
 on:
-  # mainブランチへのpush時
+  # mainブランチへのpush時にリリース用に実行
   push:
-    branches: [ "main" ]
-  # mainブランチへのpull request作成・更新時
+    branches:
+      - main
+  # main/developにPRを送った時
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
+      - develop
 
 # 実行するジョブを定義
 jobs:
-  # "build" という名前のジョブ
-  build:
+  build-and-test:
     # Windowsの最新環境で実行
     runs-on: windows-latest    # ジョブのステップを定義
     steps:
@@ -21,9 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # GoogleTestのダウンロードをキャッシュする
-      # FetchContentでダウンロードされるライブラリをキャッシュすることで、
-      # 毎回ダウンロードするのを防ぎ、Configure CMakeの時間を短縮します。
+      # 2. GoogleTestのキャッシュ
       - name: Cache GoogleTest
         uses: actions/cache@v4
         with:
@@ -32,53 +32,86 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-googletest-
 
-      # 専用アクションでLLVMをキャッシュ付きでインストール
+      # 3. LLVM (clang-tidy) のインストール
       - name: Install LLVM (for clang-tidy)
         uses: KyleMayes/install-llvm-action@v2
         with:
-          # インストールしたいLLVMのメジャーバージョンを指定します。
-          # '18' の部分を '17'などに変更することも可能です。
           version: "18"
-          # このアクションがキャッシュを自動的に管理してくれます。
-      
-      # cppcheckは別途インストールします（必要であれば）
-      # cppcheckをインストールし、そのパスを環境変数に追加する
+
+      # 4. cppcheckのインストール
       - name: Install cppcheck
-        run: |
-          choco install cppcheck -y --force
-          # Cppcheckのデフォルトのインストールパスを定義
-          $CPPCHECK_PATH = "C:\Program Files\Cppcheck"
-          # GITHUB_ENVを使って、後続のステップでPATHが通るようにする
-          echo "PATH=$env:PATH;$CPPCHECK_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        run: choco install cppcheck -y --force
         shell: pwsh
 
-      # Configure、Build、Testはキャッシュの有無に関わらず実行します。
-      # C++のビルドキャッシュは複雑なため、依存ライブラリのキャッシュが最も効果的です。
-      - name: Configure CMake
+      # 5. CMakeの設定 (デバッグビルド)
+      - name: Configure CMake (Debug)
         run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
+      # 6. プロジェクトのビルド
       - name: Build project
         run: cmake --build build --config Debug
-      
-      # 静的解析の実行方法を改善
-      # clang-tidyにビルド構成を教え、cppcheckもエラーがあっても継続するようにします。
+
+      # 7. 静的解析の実行
       - name: Run Static Analysis
         run: |
           echo "--- Running clang-tidy ---"
-          clang-tidy --version
-          # "-Exclude 'build/*'" を追加して、依存ライブラリを除外
-          $filesToAnalyze = Get-ChildItem -Path . -Filter "*.cpp" -Recurse -Exclude 'build/*'
-          if ($filesToAnalyze) {
-            echo "Analyzing files: $($filesToAnalyze.FullName -join ', ')"
-            # -p build を付けることで、CMakeが生成したコンパイル情報を使えるようになり、解析精度が向上します。
-            clang-tidy.exe -p build $filesToAnalyze.FullName
-          } else {
-            echo "No .cpp files found to analyze (excluding build directory)."
-          }
+          clang-tidy.exe -p build $(Get-ChildItem -Path . -Filter "*.cpp" -Recurse -Exclude 'build/*').FullName
           echo "--- Running cppcheck ---"
-          cppcheck --version
           cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem -i build .
-        continue-on-error: true # 静的解析でエラーが出てもワークフローを止めない
+        continue-on-error: true
 
+      # 8. テストの実行
       - name: Run tests
         run: ctest --test-dir build -C Debug
+
+ # リリースを作成するジョブ
+  release:
+    # build-and-testジョブが成功したら実行
+    needs: build-and-test
+    # mainブランチへのpushイベントでのみ実行
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Windowsの最新環境で実行
+    runs-on: windows-latest
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. CMakeの設定 (リリースビルド)
+      - name: Configure CMake (Release)
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      # 3. プロジェクトのビルド (リリースビルド)
+      - name: Build project
+        run: cmake --build build --config Release
+
+      # 4. バージョン番号からタグを生成
+      - name: Generate Tag
+        id: tag_generator
+        run: echo "tag=v$(Get-Content -Path CMakeLists.txt | Select-String -Pattern 'project\(SDotPaint VERSION ([\d\.]+)\)' | ForEach-Object { $_.Matches[0].Groups[1].Value })" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8
+        shell: pwsh
+
+      # 5. GitHubリリースを作成
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tag_generator.outputs.tag }}
+          release_name: Release ${{ steps.tag_generator.outputs.tag }}
+          body: |
+            自動リリースされた実行ファイルです。
+          draft: false
+          prerelease: false
+
+      # 6. 実行ファイルをリリースにアップロード
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build/Release/SDotPaint.exe # CMakeLists.txtのEXECUTABLE_NAMEに合わせてください
+          asset_name: SDotPaint_win_x64.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
