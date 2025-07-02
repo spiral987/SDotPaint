@@ -32,12 +32,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-googletest-
 
-      # 3. LLVM (clang-tidy) のインストール
-      - name: Install LLVM (for clang-tidy)
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "18"
-
       # 4. cppcheckのインストール
       - name: Install cppcheck
         run: choco install cppcheck -y --force
@@ -51,14 +45,6 @@ jobs:
       - name: Build project
         run: cmake --build build --config Debug
 
-      # 7. 静的解析の実行
-      - name: Run Static Analysis
-        run: |
-          echo "--- Running clang-tidy ---"
-          clang-tidy.exe -p build $(Get-ChildItem -Path . -Filter "*.cpp" -Recurse -Exclude 'build/*').FullName
-          echo "--- Running cppcheck ---"
-          cppcheck --enable=all --std=c++17 --suppress=missingIncludeSystem -i build .
-        continue-on-error: true
 
       # 8. テストの実行
       - name: Run tests
