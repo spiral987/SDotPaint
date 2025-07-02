@@ -47,5 +47,3 @@ target_link_libraries(${EXECUTABLE_NAME}
     comdlg32
     comctl32
 )
-
-
