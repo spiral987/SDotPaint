@@ -1,7 +1,22 @@
 #include "gtest/gtest.h"
-#include "../LayerManager.h"
+#include "core/LayerManager.h"
 #include "MockLayer.h"
 #include <memory>
+
+// テストフィクスチャクラスを定義
+class LayerManagerTest : public ::testing::Test
+{
+protected:
+    // 各テストの前に自動で呼ばれる準備関数
+    void SetUp() override
+    {
+        layerManager.init(100, 100);
+    }
+
+    // メンバー変数としてlayerManagerを持つ
+    // コンストラクタでMockLayerを渡す
+    LayerManager layerManager{std::make_unique<MockLayer>()};
+};
 
 // LayerManagerが正しくレイヤーに命令を伝達するかをテストする
 TEST(LayerManagerTest, ForwardsCallsToActiveLayer)
