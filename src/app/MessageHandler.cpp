@@ -203,6 +203,7 @@ void MessageHandler::HandlePointerUpdate(WPARAM wParam, LPARAM lParam)
     ScreenToClient(m_hwnd, &event.screenPos);
     event.pressure = penInfo.pressure;
 
+    // ツールコントローラーにイベントを転送
     m_toolController->OnPointerUpdate(event);
 }
 

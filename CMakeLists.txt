@@ -20,12 +20,20 @@ set(EXECUTABLE_NAME "SDotPaint")
 # ソースファイルの収集
 
 # srcディレクトリ以下のすべての.cppファイルを変数SOURCESに格納
-file(GLOB_RECURSE SOURCES "src/*.cpp")
+file(GLOB_RECURSE APP_SOURCES "src/*.cpp")
 
+# --- デバッグ用ログの追加 ---
+message(STATUS "APP_SOURCES before REMOVE_ITEM: ${APP_SOURCES}")
+
+# テストファイルをメインアプリケーションのビルドから除外
+list(REMOVE_ITEM APP_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/test/RasterLayerTest.cpp")
+
+# --- デバッグ用ログの追加 ---
+message(STATUS "APP_SOURCES after REMOVE_ITEM: ${APP_SOURCES}")
 
 # 実行ファイルの作成
 # 収集したソースファイルを使って実行ファイルを作成
-add_executable(${EXECUTABLE_NAME} WIN32 ${SOURCES})
+add_executable(${EXECUTABLE_NAME} WIN32 ${APP_SOURCES})
 
 # add_executableの後にインクルードディレクトリを指定
 target_include_directories(${EXECUTABLE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -48,4 +56,36 @@ target_link_libraries(${EXECUTABLE_NAME}
     comctl32
 )
 
+# Google Testを追加 (テストが有効な場合のみビルド)
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
+)
+FetchContent_MakeAvailable(googletest)
 
+
+# 新しいテスト実行ファイルを作成 (TestRunner)
+add_executable(SDotPaint_TestRunner
+    src/test/RasterLayerTest.cpp
+    src/layers/RasterLayer.cpp    
+    )
+
+# テスト実行ファイルをGoogle Testライブラリにリンク
+target_link_libraries(SDotPaint_TestRunner
+    GTest::gtest_main
+    GTest::gtest
+    gdiplus
+)
+
+# テスト実行ファイルにもインクルードディレクトリを追加
+target_include_directories(SDotPaint_TestRunner PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${googletest_SOURCE_DIR}/googletest/include
+)
+
+# テストを有効にする
+enable_testing()
+
+# テストを追加
+add_test(NAME RasterLayerTest COMMAND SDotPaint_TestRunner)
